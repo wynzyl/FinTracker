@@ -45,7 +45,7 @@ export function OverviewChart({ data }: OverviewChartProps) {
                 axisLine={false}
                 tickLine={false}
                 tick={{ fill: "oklch(0.65 0 0)", fontSize: 12 }}
-                tickFormatter={(value) => `$${value / 1000}k`}
+                tickFormatter={(value) => `${value / 1000}k`}
               />
               <Tooltip
                 contentStyle={{
@@ -54,7 +54,7 @@ export function OverviewChart({ data }: OverviewChartProps) {
                   borderRadius: "8px",
                   color: "oklch(0.98 0 0)",
                 }}
-                formatter={(value: number) => [`$${value.toLocaleString()}`, ""]}
+                formatter={(value: number) => [value.toLocaleString(), ""]}
                 labelStyle={{ color: "oklch(0.65 0 0)" }}
               />
               <Legend

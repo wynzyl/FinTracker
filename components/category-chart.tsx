@@ -81,7 +81,7 @@ export function CategoryChart({ transactions }: CategoryChartProps) {
                     color: "oklch(0.98 0 0)",
                   }}
                   formatter={(value: number) => [
-                    `$${value.toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
+                    value.toLocaleString("en-US", { minimumFractionDigits: 2 }),
                     "",
                   ]}
                 />
@@ -100,7 +100,7 @@ export function CategoryChart({ transactions }: CategoryChartProps) {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-medium">
-                    ${item.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                    {item.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                   </span>
                   <span className="text-xs text-muted-foreground">
                     {item.percentage}%

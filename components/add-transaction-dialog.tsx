@@ -21,52 +21,78 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { categoryLabels } from "@/lib/data"
-import type { Category, Transaction, TransactionType } from "@/lib/types"
+import { createTransaction } from "@/app/actions/transactions"
+import type { Category, TransactionType } from "@/lib/types"
 import { Plus } from "lucide-react"
-
-interface AddTransactionDialogProps {
-  onAdd: (transaction: Omit<Transaction, "id">) => void
-}
+import { toast } from "sonner"
 
 const incomeCategories: Category[] = ["salary", "freelance", "investments", "other-income"]
 const expenseCategories: Category[] = [
   "food",
-  "transport",
-  "utilities",
+  "gas",
+  "repair",
+  "electricity",
+  "water",
+  "internet",
+  "phone",
+  "other-utilities",
   "entertainment",
   "shopping",
   "health",
   "other-expense",
 ]
 
-export function AddTransactionDialog({ onAdd }: AddTransactionDialogProps) {
+interface AddTransactionDialogProps {
+  onTransactionAdded?: () => void
+}
+
+export function AddTransactionDialog({ onTransactionAdded }: AddTransactionDialogProps) {
   const [open, setOpen] = useState(false)
   const [type, setType] = useState<TransactionType>("expense")
   const [description, setDescription] = useState("")
   const [amount, setAmount] = useState("")
   const [category, setCategory] = useState<Category | "">("")
   const [date, setDate] = useState(new Date().toISOString().split("T")[0])
+  const [loading, setLoading] = useState(false)
 
   const categories = type === "income" ? incomeCategories : expenseCategories
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!description || !amount || !category || !date) return
+    if (!description || !amount || !category || !date) {
+      toast.error("Please fill in all fields")
+      return
+    }
 
-    onAdd({
-      description,
-      amount: Number.parseFloat(amount),
-      type,
-      category: category as Category,
-      date,
-    })
+    setLoading(true)
+    try {
+      await createTransaction({
+        description,
+        amount: Number.parseFloat(amount),
+        type,
+        category: category as Category,
+        date,
+      })
 
-    // Reset form
-    setDescription("")
-    setAmount("")
-    setCategory("")
-    setDate(new Date().toISOString().split("T")[0])
-    setOpen(false)
+      toast.success("Transaction added successfully!")
+      
+      // Reset form
+      setDescription("")
+      setAmount("")
+      setCategory("")
+      setDate(new Date().toISOString().split("T")[0])
+      setOpen(false)
+      
+      // Refresh dashboard data
+      if (onTransactionAdded) {
+        onTransactionAdded()
+      }
+    } catch (error) {
+      console.error("Error creating transaction:", error)
+      toast.error("Failed to add transaction")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -170,8 +196,8 @@ export function AddTransactionDialog({ onAdd }: AddTransactionDialogProps) {
             />
           </div>
 
-          <Button type="submit" className="w-full">
-            Add Transaction
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? "Adding..." : "Add Transaction"}
           </Button>
         </form>
       </DialogContent>
