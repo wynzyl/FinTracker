@@ -6,10 +6,21 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { categoryLabels, categoryIcons } from "@/lib/data"
 import { deleteTransaction } from "@/app/actions/transactions"
+import { EditTransactionDialog } from "@/components/edit-transaction-dialog"
 import type { Transaction } from "@/lib/types"
-import { ArrowUpRight, ArrowDownRight, Trash2 } from "lucide-react"
+import { ArrowUpRight, ArrowDownRight, Trash2, Edit } from "lucide-react"
 import { toast } from "sonner"
 import { useState } from "react"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 interface TransactionListProps {
   transactions: Transaction[]
@@ -18,6 +29,9 @@ interface TransactionListProps {
 
 export function TransactionList({ transactions, onDelete }: TransactionListProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null)
 
   // Sort transactions by date descending (most recent first), then by ID for consistent ordering
   const sortedTransactions = [...transactions].sort((a, b) => {
@@ -33,14 +47,21 @@ export function TransactionList({ transactions, onDelete }: TransactionListProps
     return b.id.localeCompare(a.id)
   })
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this transaction?")) {
-      return
-    }
+  const handleEdit = (transaction: Transaction) => {
+    setEditingTransaction(transaction)
+  }
 
-    setDeletingId(id)
+  const handleDeleteClick = (id: string) => {
+    setTransactionToDelete(id)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!transactionToDelete) return
+
+    setDeletingId(transactionToDelete)
     try {
-      await deleteTransaction(id)
+      await deleteTransaction(transactionToDelete)
       toast.success("Transaction deleted successfully")
       onDelete()
     } catch (error) {
@@ -48,6 +69,8 @@ export function TransactionList({ transactions, onDelete }: TransactionListProps
       toast.error("Failed to delete transaction")
     } finally {
       setDeletingId(null)
+      setDeleteDialogOpen(false)
+      setTransactionToDelete(null)
     }
   }
 
@@ -102,15 +125,27 @@ export function TransactionList({ transactions, onDelete }: TransactionListProps
                         maximumFractionDigits: 2,
                       })}
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                      onClick={() => handleDelete(transaction.id)}
-                      disabled={deletingId === transaction.id}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 hover:bg-secondary"
+                        onClick={() => handleEdit(transaction)}
+                        title="Edit transaction"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => handleDeleteClick(transaction.id)}
+                        disabled={deletingId === transaction.id}
+                        title="Delete transaction"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))
@@ -118,6 +153,44 @@ export function TransactionList({ transactions, onDelete }: TransactionListProps
           </div>
         </ScrollArea>
       </CardContent>
+
+      {/* Edit Transaction Dialog */}
+      {editingTransaction && (
+        <EditTransactionDialog
+          transaction={editingTransaction}
+          open={!!editingTransaction}
+          onOpenChange={(open) => {
+            if (!open) {
+              setEditingTransaction(null)
+            }
+          }}
+          onTransactionUpdated={() => {
+            setEditingTransaction(null)
+            onDelete()
+          }}
+        />
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Transaction</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this transaction? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   )
 }

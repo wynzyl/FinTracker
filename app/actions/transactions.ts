@@ -41,7 +41,8 @@ export async function getTransactions(): Promise<Transaction[]> {
         // Include category info for components that need it
         categoryLabel,
         categoryIcon,
-      } as Transaction & { categoryLabel?: string; categoryIcon?: string }
+        categoryId: t.categoryId, // Include category ID for editing
+      } as Transaction & { categoryLabel?: string; categoryIcon?: string; categoryId?: string }
     })
   } catch (error) {
     console.error('Error fetching transactions:', error)
@@ -100,6 +101,62 @@ export async function createTransaction(data: Omit<Transaction, 'id'> & { catego
       throw error
     }
     throw new Error('Failed to create transaction')
+  }
+}
+
+/**
+ * Update an existing transaction
+ */
+export async function updateTransaction(
+  id: string,
+  data: Omit<Transaction, 'id'> & { categoryId?: string }
+) {
+  try {
+    let categoryId: string
+
+    // If categoryId is provided, use it; otherwise find category by name
+    if (data.categoryId) {
+      categoryId = data.categoryId
+    } else {
+      // Find category by name (for backward compatibility)
+      let category = await prisma.category.findUnique({
+        where: { name: data.category },
+      })
+
+      // If not found, try case-insensitive search
+      if (!category) {
+        const allCategories = await prisma.category.findMany()
+        category = allCategories.find(
+          (cat) => cat.name.toLowerCase() === data.category.toLowerCase()
+        ) || null
+      }
+
+      if (!category) {
+        throw new Error(`Category "${data.category}" not found`)
+      }
+
+      categoryId = category.id
+    }
+
+    const transaction = await prisma.transaction.update({
+      where: { id },
+      data: {
+        description: data.description,
+        amount: data.amount,
+        type: data.type,
+        categoryId,
+        date: new Date(data.date),
+      },
+    })
+
+    revalidatePath('/')
+    return { success: true, transaction }
+  } catch (error) {
+    console.error('Error updating transaction:', error)
+    if (error instanceof Error) {
+      throw error
+    }
+    throw new Error('Failed to update transaction')
   }
 }
 
@@ -174,6 +231,33 @@ export async function getMonthlyStats() {
 }
 
 /**
+ * Get total expenses directly from database (for verification)
+ */
+export async function getTotalExpensesFromDB() {
+  try {
+    const result = await prisma.transaction.aggregate({
+      where: {
+        type: 'expense',
+      },
+      _sum: {
+        amount: true,
+      },
+      _count: {
+        id: true,
+      },
+    })
+
+    return {
+      total: result._sum.amount || 0,
+      count: result._count.id || 0,
+    }
+  } catch (error) {
+    console.error('Error calculating total expenses from DB:', error)
+    throw new Error('Failed to calculate total expenses')
+  }
+}
+
+/**
  * Get category statistics for the category chart
  */
 export async function getCategoryStats() {
@@ -190,7 +274,7 @@ export async function getCategoryStats() {
     const categoryMap = new Map<string, number>()
 
     transactions.forEach((transaction) => {
-      const categoryName = transaction.category.name
+      const categoryName = transaction.category?.name || 'other-expense'
       const current = categoryMap.get(categoryName) || 0
       categoryMap.set(categoryName, current + transaction.amount)
     })
