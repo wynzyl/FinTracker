@@ -1,23 +1,54 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Header } from "@/components/header"
 import { StatCard } from "@/components/stat-card"
 import { OverviewChart } from "@/components/overview-chart"
 import { TransactionList } from "@/components/transaction-list"
 import { CategoryChart } from "@/components/category-chart"
-import { sampleTransactions, monthlyData } from "@/lib/data"
+import { getTransactions, getMonthlyStats } from "@/app/actions/transactions"
 import type { Transaction } from "@/lib/types"
 
 export function Dashboard() {
-  const [transactions, setTransactions] = useState<Transaction[]>(sampleTransactions)
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [monthlyData, setMonthlyData] = useState<{ month: string; income: number; expenses: number }[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const handleAddTransaction = (newTransaction: Omit<Transaction, "id">) => {
-    const transaction: Transaction = {
-      ...newTransaction,
-      id: crypto.randomUUID(),
+  const loadData = async () => {
+    try {
+      const [transactionsData, monthlyStats] = await Promise.all([
+        getTransactions(),
+        getMonthlyStats(),
+      ])
+      setTransactions(transactionsData)
+      setMonthlyData(monthlyStats)
+    } catch (error) {
+      console.error('Error loading data:', error)
+    } finally {
+      setLoading(false)
     }
-    setTransactions((prev) => [transaction, ...prev])
+  }
+
+  useEffect(() => {
+    loadData()
+  }, [])
+
+  const handleRefresh = async () => {
+    try {
+      // Refresh data without showing full loading screen
+      const [transactionsData, monthlyStats] = await Promise.all([
+        getTransactions(),
+        getMonthlyStats(),
+      ])
+      setTransactions(transactionsData)
+      setMonthlyData(monthlyStats)
+    } catch (error) {
+      console.error('Error refreshing data:', error)
+    }
+  }
+
+  const handleDeleteTransaction = async () => {
+    await handleRefresh()
   }
 
   // Calculate totals
@@ -32,32 +63,40 @@ export function Dashboard() {
   const balance = totalIncome - totalExpenses
   const savingsRate = totalIncome > 0 ? ((totalIncome - totalExpenses) / totalIncome) * 100 : 0
 
-  // Calculate changes (mock data for demo)
+  // Calculate changes (mock data for demo - can be enhanced later)
   const incomeChange = 8.2
   const expenseChange = -12.5
   const balanceChange = 15.3
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-background">
-      <Header onAddTransaction={handleAddTransaction} />
+      <Header onTransactionAdded={handleRefresh} />
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Stats Grid */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
             title="Total Balance"
-            value={`$${balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
+            value={balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
             change={balanceChange}
           />
           <StatCard
             title="Total Income"
-            value={`$${totalIncome.toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
+            value={totalIncome.toLocaleString("en-US", { minimumFractionDigits: 2 })}
             change={incomeChange}
             variant="income"
           />
           <StatCard
             title="Total Expenses"
-            value={`$${totalExpenses.toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
+            value={totalExpenses.toLocaleString("en-US", { minimumFractionDigits: 2 })}
             change={expenseChange}
             variant="expense"
           />
@@ -76,7 +115,7 @@ export function Dashboard() {
 
         {/* Transaction List */}
         <div className="mt-8">
-          <TransactionList transactions={transactions} />
+          <TransactionList transactions={transactions} onDelete={handleDeleteTransaction} />
         </div>
       </main>
     </div>
