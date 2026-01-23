@@ -4,71 +4,45 @@ import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import type { Transaction, Category, TransactionType } from '@/lib/types'
 
-// Map frontend category format (kebab-case) to Prisma enum format (camelCase)
-function mapCategoryToPrisma(category: Category): string {
-  const categoryMap: Record<Category, string> = {
-    'salary': 'salary',
-    'freelance': 'freelance',
-    'investments': 'investments',
-    'other-income': 'otherIncome',
-    'food': 'food',
-    'gas': 'gas',
-    'repair': 'repair',
-    'electricity': 'electricity',
-    'water': 'water',
-    'internet': 'internet',
-    'phone': 'phone',
-    'other-utilities': 'otherUtilities',
-    'entertainment': 'entertainment',
-    'shopping': 'shopping',
-    'health': 'health',
-    'other-expense': 'otherExpense',
-  }
-  return categoryMap[category]
-}
-
-// Map Prisma enum format (camelCase) to frontend category format (kebab-case)
-function mapCategoryFromPrisma(category: string): Category {
-  const categoryMap: Record<string, Category> = {
-    'salary': 'salary',
-    'freelance': 'freelance',
-    'investments': 'investments',
-    'otherIncome': 'other-income',
-    'food': 'food',
-    'gas': 'gas',
-    'repair': 'repair',
-    'electricity': 'electricity',
-    'water': 'water',
-    'internet': 'internet',
-    'phone': 'phone',
-    'otherUtilities': 'other-utilities',
-    'entertainment': 'entertainment',
-    'shopping': 'shopping',
-    'health': 'health',
-    'otherExpense': 'other-expense',
-  }
-  return categoryMap[category] || 'other-expense'
-}
-
 /**
  * Fetch all transactions from the database
+ * Returns transactions with category information
  */
 export async function getTransactions(): Promise<Transaction[]> {
   try {
     const transactions = await prisma.transaction.findMany({
-      orderBy: {
-        date: 'desc',
+      include: {
+        category: true,
       },
+      orderBy: [
+        {
+          date: 'desc', // Most recent date first
+        },
+        {
+          createdAt: 'desc', // If dates are the same, most recently created first
+        },
+      ],
     })
 
-    return transactions.map((t) => ({
-      id: t.id,
-      description: t.description,
-      amount: t.amount,
-      type: t.type as TransactionType,
-      category: mapCategoryFromPrisma(t.category) as Category,
-      date: t.date.toISOString().split('T')[0], // Convert DateTime to YYYY-MM-DD string
-    }))
+    // Map transactions and handle any missing categories gracefully
+    return transactions.map((t) => {
+      // Ensure category exists, use fallback if not
+      const categoryName = t.category?.name || 'other-expense'
+      const categoryLabel = t.category?.label || categoryName
+      const categoryIcon = t.category?.icon || null
+
+      return {
+        id: t.id,
+        description: t.description,
+        amount: t.amount,
+        type: t.type as TransactionType,
+        category: categoryName as Category,
+        date: t.date.toISOString().split('T')[0], // Convert DateTime to YYYY-MM-DD string
+        // Include category info for components that need it
+        categoryLabel,
+        categoryIcon,
+      } as Transaction & { categoryLabel?: string; categoryIcon?: string }
+    })
   } catch (error) {
     console.error('Error fetching transactions:', error)
     throw new Error('Failed to fetch transactions')
@@ -77,15 +51,43 @@ export async function getTransactions(): Promise<Transaction[]> {
 
 /**
  * Create a new transaction
+ * Accepts either categoryId or category name (for backward compatibility)
  */
-export async function createTransaction(data: Omit<Transaction, 'id'>) {
+export async function createTransaction(data: Omit<Transaction, 'id'> & { categoryId?: string }) {
   try {
+    let categoryId: string
+
+    // If categoryId is provided, use it; otherwise find category by name
+    if (data.categoryId) {
+      categoryId = data.categoryId
+    } else {
+      // Find category by name (for backward compatibility)
+      // Try exact match first, then case-insensitive search
+      let category = await prisma.category.findUnique({
+        where: { name: data.category },
+      })
+
+      // If not found, try case-insensitive search
+      if (!category) {
+        const allCategories = await prisma.category.findMany()
+        category = allCategories.find(
+          (cat) => cat.name.toLowerCase() === data.category.toLowerCase()
+        ) || null
+      }
+
+      if (!category) {
+        throw new Error(`Category "${data.category}" not found`)
+      }
+
+      categoryId = category.id
+    }
+
     const transaction = await prisma.transaction.create({
       data: {
         description: data.description,
         amount: data.amount,
         type: data.type,
-        category: mapCategoryToPrisma(data.category) as any,
+        categoryId,
         date: new Date(data.date),
       },
     })
@@ -94,6 +96,9 @@ export async function createTransaction(data: Omit<Transaction, 'id'>) {
     return { success: true, transaction }
   } catch (error) {
     console.error('Error creating transaction:', error)
+    if (error instanceof Error) {
+      throw error
+    }
     throw new Error('Failed to create transaction')
   }
 }
@@ -177,14 +182,17 @@ export async function getCategoryStats() {
       where: {
         type: 'expense',
       },
+      include: {
+        category: true,
+      },
     })
 
     const categoryMap = new Map<string, number>()
 
     transactions.forEach((transaction) => {
-      const category = mapCategoryFromPrisma(transaction.category)
-      const current = categoryMap.get(category) || 0
-      categoryMap.set(category, current + transaction.amount)
+      const categoryName = transaction.category.name
+      const current = categoryMap.get(categoryName) || 0
+      categoryMap.set(categoryName, current + transaction.amount)
     })
 
     const totalExpenses = Array.from(categoryMap.values()).reduce((sum, amount) => sum + amount, 0)

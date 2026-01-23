@@ -1,7 +1,7 @@
 import { PrismaClient } from '../lib/generated/prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { Pool } from 'pg'
-import { sampleTransactions } from '../lib/data'
+import { sampleTransactions, categoryLabels, categoryIcons } from '../lib/data'
 
 // Create postgres connection
 let connectionString = process.env.DATABASE_URL
@@ -38,49 +38,84 @@ const prisma = new PrismaClient({
   adapter,
 })
 
-// Map frontend category format (kebab-case) to Prisma enum format (camelCase)
-function mapCategoryToPrisma(category: string): string {
-  const categoryMap: Record<string, string> = {
-    'salary': 'salary',
-    'freelance': 'freelance',
-    'investments': 'investments',
-    'other-income': 'otherIncome',
-    'food': 'food',
-    'gas': 'gas',
-    'repair': 'repair',
-    'electricity': 'electricity',
-    'water': 'water',
-    'internet': 'internet',
-    'phone': 'phone',
-    'other-utilities': 'otherUtilities',
-    'transport': 'gas', // Map old transport to gas
-    'utilities': 'electricity', // Map old utilities to electricity
-    'entertainment': 'entertainment',
-    'shopping': 'shopping',
-    'health': 'health',
-    'other-expense': 'otherExpense',
-  }
-  return categoryMap[category] || 'otherExpense'
-}
+// Define initial categories
+const initialCategories = [
+  // Income categories
+  { name: 'salary', label: 'Salary', icon: '💼', type: 'income' as const },
+  { name: 'freelance', label: 'Freelance', icon: '💻', type: 'income' as const },
+  { name: 'investments', label: 'Investments', icon: '📈', type: 'income' as const },
+  { name: 'other-income', label: 'Other Income', icon: '💰', type: 'income' as const },
+  // Expense categories
+  { name: 'food', label: 'Food & Dining', icon: '🍔', type: 'expense' as const },
+  { name: 'gas', label: 'Gas', icon: '⛽', type: 'expense' as const },
+  { name: 'repair', label: 'Repair', icon: '🔧', type: 'expense' as const },
+  { name: 'electricity', label: 'Electricity', icon: '⚡', type: 'expense' as const },
+  { name: 'water', label: 'Water', icon: '💧', type: 'expense' as const },
+  { name: 'internet', label: 'Internet', icon: '🌐', type: 'expense' as const },
+  { name: 'phone', label: 'Phone', icon: '📱', type: 'expense' as const },
+  { name: 'other-utilities', label: 'Other Utilities', icon: '🔌', type: 'expense' as const },
+  { name: 'entertainment', label: 'Entertainment', icon: '🎬', type: 'expense' as const },
+  { name: 'shopping', label: 'Shopping', icon: '🛍️', type: 'expense' as const },
+  { name: 'health', label: 'Health', icon: '🏥', type: 'expense' as const },
+  { name: 'other-expense', label: 'Other Expense', icon: '📦', type: 'expense' as const },
+]
 
 async function main() {
   console.log('🌱 Starting seed...')
 
-  // Clear existing transactions (optional - comment out if you want to keep existing data)
-  console.log('🗑️  Clearing existing transactions...')
+  // Clear existing data
+  console.log('🗑️  Clearing existing data...')
   await prisma.transaction.deleteMany({})
-  console.log('✅ Cleared existing transactions')
+  await prisma.category.deleteMany({})
+  console.log('✅ Cleared existing data')
+
+  // Create categories
+  console.log(`📁 Creating ${initialCategories.length} categories...`)
+  const categoryMap = new Map<string, string>()
+  
+  for (const cat of initialCategories) {
+    const category = await prisma.category.upsert({
+      where: { name: cat.name },
+      update: {
+        label: cat.label,
+        icon: cat.icon,
+        type: cat.type,
+      },
+      create: {
+        name: cat.name,
+        label: cat.label,
+        icon: cat.icon,
+        type: cat.type,
+      },
+    })
+    categoryMap.set(cat.name, category.id)
+  }
+  console.log('✅ Categories created')
 
   // Insert sample transactions
   console.log(`📝 Inserting ${sampleTransactions.length} transactions...`)
   
   for (const transaction of sampleTransactions) {
+    // Map old category names to new ones
+    let categoryName = transaction.category
+    if (categoryName === 'utilities') {
+      categoryName = 'electricity'
+    } else if (categoryName === 'transport') {
+      categoryName = 'gas'
+    }
+
+    const categoryId = categoryMap.get(categoryName)
+    if (!categoryId) {
+      console.warn(`⚠️  Category "${categoryName}" not found, skipping transaction: ${transaction.description}`)
+      continue
+    }
+
     await prisma.transaction.create({
       data: {
         description: transaction.description,
         amount: transaction.amount,
         type: transaction.type,
-        category: mapCategoryToPrisma(transaction.category),
+        categoryId,
         date: new Date(transaction.date),
       },
     })

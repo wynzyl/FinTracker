@@ -19,9 +19,19 @@ interface TransactionListProps {
 export function TransactionList({ transactions, onDelete }: TransactionListProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
-  const sortedTransactions = [...transactions].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-  )
+  // Sort transactions by date descending (most recent first), then by ID for consistent ordering
+  const sortedTransactions = [...transactions].sort((a, b) => {
+    const dateA = new Date(a.date).getTime()
+    const dateB = new Date(b.date).getTime()
+    
+    // First sort by date (descending - most recent first)
+    if (dateB !== dateA) {
+      return dateB - dateA
+    }
+    
+    // If dates are the same, sort by ID (descending - most recent first)
+    return b.id.localeCompare(a.id)
+  })
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this transaction?")) {
@@ -61,12 +71,12 @@ export function TransactionList({ transactions, onDelete }: TransactionListProps
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-lg">
-                      {categoryIcons[transaction.category]}
+                      {(transaction as any).categoryIcon || categoryIcons[transaction.category] || "📋"}
                     </div>
                     <div>
                       <p className="font-medium">{transaction.description}</p>
                       <p className="text-sm text-muted-foreground">
-                        {categoryLabels[transaction.category]} •{" "}
+                        {(transaction as any).categoryLabel || categoryLabels[transaction.category] || transaction.category} •{" "}
                         {new Date(transaction.date).toLocaleDateString("en-US", {
                           month: "short",
                           day: "numeric",

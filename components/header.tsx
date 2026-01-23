@@ -1,6 +1,7 @@
 "use client"
 
 import { AddTransactionDialog } from "@/components/add-transaction-dialog"
+import { CategoryManagementDialog } from "@/components/category-management-dialog"
 import { Wallet } from "lucide-react"
 
 interface HeaderProps {
@@ -20,7 +21,10 @@ export function Header({ onTransactionAdded }: HeaderProps) {
             <p className="text-xs text-muted-foreground">Income & Expense Monitor</p>
           </div>
         </div>
-        <AddTransactionDialog onTransactionAdded={onTransactionAdded} />
+        <div className="flex items-center gap-2">
+          <CategoryManagementDialog />
+          <AddTransactionDialog onTransactionAdded={onTransactionAdded} />
+        </div>
       </div>
     </header>
   )

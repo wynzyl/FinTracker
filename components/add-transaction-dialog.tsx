@@ -2,7 +2,7 @@
 
 import React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -20,27 +20,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { categoryLabels } from "@/lib/data"
 import { createTransaction } from "@/app/actions/transactions"
-import type { Category, TransactionType } from "@/lib/types"
+import { getCategoriesByType } from "@/app/actions/categories"
+import type { TransactionType } from "@/lib/types"
 import { Plus } from "lucide-react"
 import { toast } from "sonner"
 
-const incomeCategories: Category[] = ["salary", "freelance", "investments", "other-income"]
-const expenseCategories: Category[] = [
-  "food",
-  "gas",
-  "repair",
-  "electricity",
-  "water",
-  "internet",
-  "phone",
-  "other-utilities",
-  "entertainment",
-  "shopping",
-  "health",
-  "other-expense",
-]
+interface Category {
+  id: string
+  name: string
+  label: string
+  icon: string | null
+  type: TransactionType
+}
 
 interface AddTransactionDialogProps {
   onTransactionAdded?: () => void
@@ -51,15 +43,33 @@ export function AddTransactionDialog({ onTransactionAdded }: AddTransactionDialo
   const [type, setType] = useState<TransactionType>("expense")
   const [description, setDescription] = useState("")
   const [amount, setAmount] = useState("")
-  const [category, setCategory] = useState<Category | "">("")
+  const [categoryId, setCategoryId] = useState<string>("")
   const [date, setDate] = useState(new Date().toISOString().split("T")[0])
   const [loading, setLoading] = useState(false)
+  const [categories, setCategories] = useState<Category[]>([])
 
-  const categories = type === "income" ? incomeCategories : expenseCategories
+  // Load categories when type changes or dialog opens
+  useEffect(() => {
+    if (open) {
+      loadCategories()
+    }
+  }, [type, open])
+
+  const loadCategories = async () => {
+    try {
+      const data = await getCategoriesByType(type)
+      setCategories(data as Category[])
+      // Reset category selection when type changes
+      setCategoryId("")
+    } catch (error) {
+      console.error("Error loading categories:", error)
+      toast.error("Failed to load categories")
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!description || !amount || !category || !date) {
+    if (!description || !amount || !categoryId || !date) {
       toast.error("Please fill in all fields")
       return
     }
@@ -70,7 +80,8 @@ export function AddTransactionDialog({ onTransactionAdded }: AddTransactionDialo
         description,
         amount: Number.parseFloat(amount),
         type,
-        category: category as Category,
+        category: "", // Not used when categoryId is provided
+        categoryId,
         date,
       })
 
@@ -79,7 +90,7 @@ export function AddTransactionDialog({ onTransactionAdded }: AddTransactionDialo
       // Reset form
       setDescription("")
       setAmount("")
-      setCategory("")
+      setCategoryId("")
       setDate(new Date().toISOString().split("T")[0])
       setOpen(false)
       
@@ -89,7 +100,7 @@ export function AddTransactionDialog({ onTransactionAdded }: AddTransactionDialo
       }
     } catch (error) {
       console.error("Error creating transaction:", error)
-      toast.error("Failed to add transaction")
+      toast.error(error instanceof Error ? error.message : "Failed to add transaction")
     } finally {
       setLoading(false)
     }
@@ -114,7 +125,7 @@ export function AddTransactionDialog({ onTransactionAdded }: AddTransactionDialo
               variant={type === "income" ? "default" : "outline"}
               onClick={() => {
                 setType("income")
-                setCategory("")
+                setCategoryId("")
               }}
               className={
                 type === "income"
@@ -129,7 +140,7 @@ export function AddTransactionDialog({ onTransactionAdded }: AddTransactionDialo
               variant={type === "expense" ? "default" : "outline"}
               onClick={() => {
                 setType("expense")
-                setCategory("")
+                setCategoryId("")
               }}
               className={
                 type === "expense"
@@ -147,8 +158,8 @@ export function AddTransactionDialog({ onTransactionAdded }: AddTransactionDialo
               id="description"
               placeholder="Enter description"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="border-border/50 bg-secondary"
+              onChange={(e) => setDescription(e.target.value.toUpperCase())}
+              className="border-border/50 bg-secondary uppercase"
             />
           </div>
 
@@ -168,16 +179,25 @@ export function AddTransactionDialog({ onTransactionAdded }: AddTransactionDialo
 
           <div className="space-y-2">
             <Label htmlFor="category">Category</Label>
-            <Select value={category} onValueChange={(v) => setCategory(v as Category)}>
+            <Select value={categoryId} onValueChange={setCategoryId}>
               <SelectTrigger className="border-border/50 bg-secondary">
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent className="border-border/50 bg-card">
-                {categories.map((cat) => (
-                  <SelectItem key={cat} value={cat}>
-                    {categoryLabels[cat]}
+                {categories.length === 0 ? (
+                  <SelectItem value="none" disabled>
+                    No categories available
                   </SelectItem>
-                ))}
+                ) : (
+                  categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      <span className="flex items-center gap-2">
+                        {cat.icon && <span>{cat.icon}</span>}
+                        <span>{cat.label}</span>
+                      </span>
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>

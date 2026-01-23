@@ -16,14 +16,21 @@ export function Dashboard() {
 
   const loadData = async () => {
     try {
+      setLoading(true)
       const [transactionsData, monthlyStats] = await Promise.all([
         getTransactions(),
         getMonthlyStats(),
       ])
+      console.log('Loaded transactions:', transactionsData.length)
+      console.log('Income transactions:', transactionsData.filter(t => t.type === 'income').length)
+      console.log('Expense transactions:', transactionsData.filter(t => t.type === 'expense').length)
       setTransactions(transactionsData)
       setMonthlyData(monthlyStats)
     } catch (error) {
       console.error('Error loading data:', error)
+      // Set empty arrays on error to prevent UI issues
+      setTransactions([])
+      setMonthlyData([])
     } finally {
       setLoading(false)
     }
@@ -40,6 +47,9 @@ export function Dashboard() {
         getTransactions(),
         getMonthlyStats(),
       ])
+      console.log('Refreshed transactions:', transactionsData.length)
+      console.log('Income transactions:', transactionsData.filter(t => t.type === 'income').length)
+      console.log('Expense transactions:', transactionsData.filter(t => t.type === 'expense').length)
       setTransactions(transactionsData)
       setMonthlyData(monthlyStats)
     } catch (error) {
@@ -59,6 +69,15 @@ export function Dashboard() {
   const totalExpenses = transactions
     .filter((t) => t.type === "expense")
     .reduce((sum, t) => sum + t.amount, 0)
+  
+  // Debug: Log transaction details to help identify issues
+  if (transactions.length > 0) {
+    console.log('Total transactions:', transactions.length)
+    console.log('Income count:', transactions.filter(t => t.type === "income").length)
+    console.log('Expense count:', transactions.filter(t => t.type === "expense").length)
+    console.log('Total income:', totalIncome)
+    console.log('Total expenses:', totalExpenses)
+  }
 
   const balance = totalIncome - totalExpenses
   const savingsRate = totalIncome > 0 ? ((totalIncome - totalExpenses) / totalIncome) * 100 : 0
