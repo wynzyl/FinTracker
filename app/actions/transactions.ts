@@ -24,7 +24,20 @@ function mapCategoryToPrisma(category: Category): string {
     'health': 'health',
     'other-expense': 'otherExpense',
   }
-  return categoryMap[category]
+  
+  const mappedCategory = categoryMap[category]
+  
+  // Validate that the category exists in categoryMap
+  if (mappedCategory === undefined) {
+    const validCategories = Object.keys(categoryMap).join(', ')
+    throw new Error(
+      `Invalid category: "${category}". ` +
+      `Category must be one of the following Category types: ${validCategories}. ` +
+      `Received: ${category}`
+    )
+  }
+  
+  return mappedCategory
 }
 
 // Map Prisma enum format (camelCase) to frontend category format (kebab-case)
@@ -147,19 +160,23 @@ export async function getMonthlyStats() {
     })
 
     // Convert to array and sort by date (most recent first)
+    // Preserve monthKey for proper year+month sorting
     const monthlyData = Array.from(monthlyMap.entries())
-      .map(([key, data]) => ({
-        month: new Date(key + '-01').toLocaleDateString('en-US', { month: 'short' }),
+      .map(([monthKey, data]) => ({
+        monthKey, // Keep original "YYYY-MM" key for sorting
+        month: new Date(monthKey + '-01').toLocaleDateString('en-US', { month: 'short' }), // Display format
         income: data.income,
         expenses: data.expenses,
       }))
       .sort((a, b) => {
-        const dateA = new Date(a.month + ' 1, ' + new Date().getFullYear())
-        const dateB = new Date(b.month + ' 1, ' + new Date().getFullYear())
-        return dateB.getTime() - dateA.getTime()
+        // Sort using the actual date from monthKey (preserves year context)
+        const dateA = new Date(a.monthKey + '-01')
+        const dateB = new Date(b.monthKey + '-01')
+        return dateB.getTime() - dateA.getTime() // Most recent first
       })
       .slice(0, 6) // Get last 6 months
       .reverse() // Reverse to show oldest to newest
+      .map(({ monthKey, ...rest }) => rest) // Remove monthKey from final output, keep only display fields
 
     return monthlyData
   } catch (error) {
