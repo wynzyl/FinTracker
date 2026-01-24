@@ -90,22 +90,20 @@ export function CategoryChart({ transactions }: CategoryChartProps) {
           </div>
           <div className="flex flex-1 flex-col gap-2">
             {chartData.map((item, index) => (
-              <div key={item.category} className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div
-                    className="h-3 w-3 rounded-full"
-                    style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                  />
-                  <span className="text-sm text-muted-foreground">{item.name}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-medium">
-                    {item.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {item.percentage}%
-                  </span>
-                </div>
+              <div key={item.category} className="flex items-center gap-2">
+                <div
+                  className="h-3 w-3 rounded-full shrink-0"
+                  style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                />
+                <span className="text-sm font-medium text-left whitespace-nowrap flex-1">
+                  {(item.name || item.category).toUpperCase()}
+                </span>
+                <span className="text-sm font-medium text-right w-20">
+                  {item.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                </span>
+                <span className="text-sm font-medium text-right w-16">
+                  {item.percentage}%
+                </span>
               </div>
             ))}
           </div>
