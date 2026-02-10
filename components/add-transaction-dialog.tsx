@@ -80,7 +80,7 @@ export function AddTransactionDialog({ onTransactionAdded }: AddTransactionDialo
         description,
         amount: Number.parseFloat(amount),
         type,
-        category: "", // Not used when categoryId is provided
+        category: "other-expense", // Not used when categoryId is provided
         categoryId,
         date,
       })

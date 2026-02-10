@@ -50,7 +50,7 @@ export function EditTransactionDialog({
   const [description, setDescription] = useState(transaction.description)
   const [amount, setAmount] = useState(transaction.amount.toString())
   const [categoryId, setCategoryId] = useState<string>(
-    (transaction as any).categoryId || ""
+    transaction.categoryId || ""
   )
   const [date, setDate] = useState(transaction.date)
   const [loading, setLoading] = useState(false)
@@ -82,7 +82,7 @@ export function EditTransactionDialog({
       setDescription(transaction.description)
       setAmount(transaction.amount.toString())
       setDate(transaction.date)
-      setCategoryId((transaction as any).categoryId || "")
+      setCategoryId(transaction.categoryId || "")
     }
   }, [transaction])
 
@@ -109,7 +109,7 @@ export function EditTransactionDialog({
         description,
         amount: Number.parseFloat(amount),
         type,
-        category: "", // Not used when categoryId is provided
+        category: "other-expense", // Not used when categoryId is provided
         categoryId,
         date,
       })

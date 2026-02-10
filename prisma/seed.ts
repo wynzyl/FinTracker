@@ -96,17 +96,9 @@ async function main() {
   console.log(`📝 Inserting ${sampleTransactions.length} transactions...`)
   
   for (const transaction of sampleTransactions) {
-    // Map old category names to new ones
-    let categoryName = transaction.category
-    if (categoryName === 'utilities') {
-      categoryName = 'electricity'
-    } else if (categoryName === 'transport') {
-      categoryName = 'gas'
-    }
-
-    const categoryId = categoryMap.get(categoryName)
+    const categoryId = categoryMap.get(transaction.category)
     if (!categoryId) {
-      console.warn(`⚠️  Category "${categoryName}" not found, skipping transaction: ${transaction.description}`)
+      console.warn(`⚠️  Category "${transaction.category}" not found, skipping transaction: ${transaction.description}`)
       continue
     }
 

@@ -37,12 +37,11 @@ export async function getTransactions(): Promise<Transaction[]> {
         amount: t.amount,
         type: t.type as TransactionType,
         category: categoryName as Category,
-        date: t.date.toISOString().split('T')[0], // Convert DateTime to YYYY-MM-DD string
-        // Include category info for components that need it
+        categoryId: t.categoryId,
         categoryLabel,
         categoryIcon,
-        categoryId: t.categoryId, // Include category ID for editing
-      } as Transaction & { categoryLabel?: string; categoryIcon?: string; categoryId?: string }
+        date: t.date.toISOString().split('T')[0],
+      }
     })
   } catch (error) {
     console.error('Error fetching transactions:', error)
@@ -54,7 +53,7 @@ export async function getTransactions(): Promise<Transaction[]> {
  * Create a new transaction
  * Accepts either categoryId or category name (for backward compatibility)
  */
-export async function createTransaction(data: Omit<Transaction, 'id'> & { categoryId?: string }) {
+export async function createTransaction(data: Omit<Transaction, 'id' | 'categoryId' | 'categoryLabel' | 'categoryIcon'> & { categoryId?: string }) {
   try {
     let categoryId: string
 
@@ -109,7 +108,7 @@ export async function createTransaction(data: Omit<Transaction, 'id'> & { catego
  */
 export async function updateTransaction(
   id: string,
-  data: Omit<Transaction, 'id'> & { categoryId?: string }
+  data: Omit<Transaction, 'id' | 'categoryId' | 'categoryLabel' | 'categoryIcon'> & { categoryId?: string }
 ) {
   try {
     let categoryId: string

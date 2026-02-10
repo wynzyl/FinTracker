@@ -94,12 +94,12 @@ export function TransactionList({ transactions, onDelete }: TransactionListProps
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-lg">
-                      {(transaction as any).categoryIcon || categoryIcons[transaction.category] || "📋"}
+                      {transaction.categoryIcon || categoryIcons[transaction.category] || "📋"}
                     </div>
                     <div>
                       <p className="font-medium">{transaction.description}</p>
                       <p className="text-sm text-muted-foreground">
-                        {(transaction as any).categoryLabel || categoryLabels[transaction.category] || transaction.category} •{" "}
+                        {transaction.categoryLabel || categoryLabels[transaction.category] || transaction.category} •{" "}
                         {new Date(transaction.date).toLocaleDateString("en-US", {
                           month: "short",
                           day: "numeric",

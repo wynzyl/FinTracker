@@ -1,6 +1,15 @@
-import type { Transaction } from "./types"
+import type { TransactionType } from "./types"
 
-export const sampleTransactions: Transaction[] = [
+interface SampleTransaction {
+  id: string
+  description: string
+  amount: number
+  type: TransactionType
+  category: string
+  date: string
+}
+
+export const sampleTransactions: SampleTransaction[] = [
   {
     id: "1",
     description: "Monthly Salary",
@@ -38,7 +47,7 @@ export const sampleTransactions: Transaction[] = [
     description: "Electric Bill",
     amount: 120,
     type: "expense",
-    category: "utilities",
+    category: "electricity",
     date: "2026-01-16",
   },
   {
@@ -46,7 +55,7 @@ export const sampleTransactions: Transaction[] = [
     description: "Gas & Transport",
     amount: 95,
     type: "expense",
-    category: "transport",
+    category: "gas",
     date: "2026-01-14",
   },
   {
@@ -94,7 +103,7 @@ export const sampleTransactions: Transaction[] = [
     description: "Internet Bill",
     amount: 65,
     type: "expense",
-    category: "utilities",
+    category: "internet",
     date: "2026-01-19",
   },
 ]
