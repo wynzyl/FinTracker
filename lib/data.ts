@@ -6,6 +6,7 @@ export const sampleTransactions: Transaction[] = [
     description: "Monthly Salary",
     amount: 5000,
     type: "income",
+    paymentMode: "bdo_savings",
     category: "salary",
     date: "2026-01-15",
   },
@@ -14,6 +15,7 @@ export const sampleTransactions: Transaction[] = [
     description: "Freelance Project",
     amount: 1200,
     type: "income",
+    paymentMode: "gcash",
     category: "freelance",
     date: "2026-01-12",
   },
@@ -22,6 +24,7 @@ export const sampleTransactions: Transaction[] = [
     description: "Stock Dividends",
     amount: 350,
     type: "income",
+    paymentMode: "bdo_savings",
     category: "investments",
     date: "2026-01-10",
   },
@@ -30,6 +33,7 @@ export const sampleTransactions: Transaction[] = [
     description: "Grocery Shopping",
     amount: 285,
     type: "expense",
+    paymentMode: "cash",
     category: "food",
     date: "2026-01-18",
   },
@@ -38,7 +42,8 @@ export const sampleTransactions: Transaction[] = [
     description: "Electric Bill",
     amount: 120,
     type: "expense",
-    category: "utilities",
+    paymentMode: "gcash",
+    category: "electricity",
     date: "2026-01-16",
   },
   {
@@ -46,7 +51,8 @@ export const sampleTransactions: Transaction[] = [
     description: "Gas & Transport",
     amount: 95,
     type: "expense",
-    category: "transport",
+    paymentMode: "cash",
+    category: "gas",
     date: "2026-01-14",
   },
   {
@@ -54,6 +60,7 @@ export const sampleTransactions: Transaction[] = [
     description: "Netflix Subscription",
     amount: 15.99,
     type: "expense",
+    paymentMode: "bdo_savings",
     category: "entertainment",
     date: "2026-01-13",
   },
@@ -62,6 +69,7 @@ export const sampleTransactions: Transaction[] = [
     description: "New Headphones",
     amount: 199,
     type: "expense",
+    paymentMode: "gcash",
     category: "shopping",
     date: "2026-01-11",
   },
@@ -70,6 +78,7 @@ export const sampleTransactions: Transaction[] = [
     description: "Gym Membership",
     amount: 45,
     type: "expense",
+    paymentMode: "cash",
     category: "health",
     date: "2026-01-08",
   },
@@ -78,6 +87,7 @@ export const sampleTransactions: Transaction[] = [
     description: "Side Gig Payment",
     amount: 400,
     type: "income",
+    paymentMode: "cbs_checking",
     category: "other-income",
     date: "2026-01-05",
   },
@@ -86,6 +96,7 @@ export const sampleTransactions: Transaction[] = [
     description: "Restaurant Dinner",
     amount: 78,
     type: "expense",
+    paymentMode: "cash",
     category: "food",
     date: "2026-01-20",
   },
@@ -94,7 +105,8 @@ export const sampleTransactions: Transaction[] = [
     description: "Internet Bill",
     amount: 65,
     type: "expense",
-    category: "utilities",
+    paymentMode: "cbs_checking",
+    category: "internet",
     date: "2026-01-19",
   },
 ]
@@ -107,6 +119,20 @@ export const monthlyData = [
   { month: "Dec", income: 7200, expenses: 4200 },
   { month: "Jan", income: 6950, expenses: 903 },
 ]
+
+export const paymentModeLabels: Record<string, string> = {
+  cash: "Cash",
+  gcash: "GCash",
+  bdo_savings: "BDO Savings",
+  cbs_checking: "CBS Checking",
+}
+
+export const paymentModeIcons: Record<string, string> = {
+  cash: "💵",
+  gcash: "📱",
+  bdo_savings: "🏦",
+  cbs_checking: "🏛️",
+}
 
 export const categoryLabels: Record<string, string> = {
   salary: "Salary",

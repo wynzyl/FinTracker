@@ -54,6 +54,15 @@ Rules and guidelines for AI-assisted development on the Yamban FinTracker projec
 - Use **Sonner** for toast notifications
 - Use **Recharts** for data visualization
 
+## Payment Mode Rules
+
+- Every transaction **must** have a `paymentMode` field
+- Valid payment modes: `cash`, `gcash`, `bdo_savings`, `cbs_checking` (defined as Prisma enum)
+- Default to `"cash"` when no payment mode is specified
+- Payment mode labels and icons are defined in `lib/data.ts` (`paymentModeLabels`, `paymentModeIcons`)
+- The `PaymentMode` TypeScript type is defined in `lib/types.ts`
+- When adding new payment modes, update: Prisma schema enum, TypeScript type, labels map, icons map, and run a migration
+
 ## Database Rules
 
 - Always use **Prisma** for database queries — no raw SQL unless absolutely necessary
@@ -63,6 +72,7 @@ Rules and guidelines for AI-assisted development on the Yamban FinTracker projec
 - Use **CUID** for primary keys (`@default(cuid())`)
 - Always include `createdAt` and `updatedAt` timestamps on models
 - Add **indexes** on frequently queried columns
+- Use **Prisma enums** for fixed value sets (`TransactionType`, `PaymentMode`)
 
 ## Error Handling
 

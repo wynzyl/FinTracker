@@ -2,7 +2,8 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
-import type { Transaction, Category, TransactionType } from '@/lib/types'
+import type { Transaction, Category, TransactionType, PaymentMode, PaymentModeSummary } from '@/lib/types'
+import { paymentModeLabels } from '@/lib/data'
 
 /**
  * Fetch all transactions from the database
@@ -36,6 +37,7 @@ export async function getTransactions(): Promise<Transaction[]> {
         description: t.description,
         amount: t.amount,
         type: t.type as TransactionType,
+        paymentMode: t.paymentMode as PaymentMode,
         category: categoryName as Category,
         date: t.date.toISOString().split('T')[0], // Convert DateTime to YYYY-MM-DD string
         // Include category info for components that need it
@@ -88,6 +90,7 @@ export async function createTransaction(data: Omit<Transaction, 'id'> & { catego
         description: data.description,
         amount: data.amount,
         type: data.type,
+        paymentMode: data.paymentMode || 'cash',
         categoryId,
         date: new Date(data.date),
       },
@@ -144,6 +147,7 @@ export async function updateTransaction(
         description: data.description,
         amount: data.amount,
         type: data.type,
+        paymentMode: data.paymentMode || 'cash',
         categoryId,
         date: new Date(data.date),
       },
@@ -289,5 +293,52 @@ export async function getCategoryStats() {
   } catch (error) {
     console.error('Error fetching category stats:', error)
     throw new Error('Failed to fetch category statistics')
+  }
+}
+
+/**
+ * Get payment mode statistics for the payment mode summary report
+ */
+export async function getPaymentModeStats(): Promise<PaymentModeSummary[]> {
+  try {
+    const transactions = await prisma.transaction.findMany({
+      select: {
+        type: true,
+        amount: true,
+        paymentMode: true,
+      },
+    })
+
+    const modeMap = new Map<string, { income: number; expenses: number; count: number }>()
+
+    const allModes = ['cash', 'gcash', 'bdo_savings', 'cbs_checking']
+    allModes.forEach(mode => {
+      modeMap.set(mode, { income: 0, expenses: 0, count: 0 })
+    })
+
+    transactions.forEach((t) => {
+      const entry = modeMap.get(t.paymentMode)!
+      entry.count++
+      if (t.type === 'income') {
+        entry.income += t.amount
+      } else {
+        entry.expenses += t.amount
+      }
+    })
+
+    return allModes.map(mode => {
+      const data = modeMap.get(mode)!
+      return {
+        paymentMode: mode as PaymentMode,
+        label: paymentModeLabels[mode],
+        totalIncome: data.income,
+        totalExpenses: data.expenses,
+        netFlow: data.income - data.expenses,
+        transactionCount: data.count,
+      }
+    })
+  } catch (error) {
+    console.error('Error fetching payment mode stats:', error)
+    throw new Error('Failed to fetch payment mode statistics')
   }
 }

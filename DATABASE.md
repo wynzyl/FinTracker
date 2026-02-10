@@ -18,6 +18,24 @@ enum TransactionType {
 }
 ```
 
+### Enum: PaymentMode
+
+```prisma
+enum PaymentMode {
+  cash
+  gcash
+  bdo_savings
+  cbs_checking
+}
+```
+
+| Value | Display Label | Icon |
+|-------|--------------|------|
+| `cash` | Cash | 💵 |
+| `gcash` | GCash | 📱 |
+| `bdo_savings` | BDO Savings | 🏦 |
+| `cbs_checking` | CBS Checking | 🏛️ |
+
 ### Model: Category
 
 ```prisma
@@ -50,19 +68,21 @@ model Category {
 
 ```prisma
 model Transaction {
-  id          String          @id @default(cuid())
+  id          String      @id @default(cuid())
   description String
   amount      Float
   type        TransactionType
+  paymentMode PaymentMode @default(cash)
   categoryId  String
-  category    Category        @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  date        DateTime        @default(now())
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  category    Category    @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  date        DateTime    @default(now())
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
   @@index([type])
   @@index([categoryId])
   @@index([date])
+  @@index([paymentMode])
 }
 ```
 
@@ -72,6 +92,7 @@ model Transaction {
 | `description` | String | Transaction description |
 | `amount` | Float | Transaction amount |
 | `type` | TransactionType | `income` or `expense` |
+| `paymentMode` | PaymentMode | Payment channel (`cash`, `gcash`, `bdo_savings`, `cbs_checking`). Defaults to `cash` |
 | `categoryId` | String | Foreign key to Category |
 | `date` | DateTime | Transaction date |
 | `createdAt` | DateTime | Auto-set on creation |
@@ -87,9 +108,10 @@ model Transaction {
 │ name (unique)    │  │    │ description      │
 │ label            │  │    │ amount           │
 │ icon             │  │    │ type             │
-│ type             │  └───>│ categoryId (FK)  │
-│ createdAt        │       │ date             │
-│ updatedAt        │       │ createdAt        │
+│ type             │  └───>│ paymentMode      │
+│ createdAt        │       │ categoryId (FK)  │
+│ updatedAt        │       │ date             │
+│                  │       │ createdAt        │
 │                  │       │ updatedAt        │
 └──────────────────┘       └──────────────────┘
      One                        Many
@@ -111,6 +133,7 @@ model Transaction {
 | Transaction | `type` | Filter transactions by income/expense |
 | Transaction | `categoryId` | Join queries with Category |
 | Transaction | `date` | Sort and filter by date |
+| Transaction | `paymentMode` | Filter transactions by payment mode |
 
 ## Seed Data
 
@@ -120,27 +143,38 @@ The database is seeded with **16 default categories**:
 
 | Name | Label | Icon |
 |------|-------|------|
-| salary | Salary | ![salary] |
-| freelance | Freelance | ![freelance] |
-| investments | Investments | ![investments] |
-| other-income | Other Income | ![other-income] |
+| salary | Salary | 💼 |
+| freelance | Freelance | 💻 |
+| investments | Investments | 📈 |
+| other-income | Other Income | 💰 |
 
 ### Expense Categories
 
 | Name | Label | Icon |
 |------|-------|------|
-| food | Food & Dining | ![food] |
-| gas | Gas | ![gas] |
-| repair | Repair & Maintenance | ![repair] |
-| electricity | Electricity | ![electricity] |
-| water | Water | ![water] |
-| internet | Internet | ![internet] |
-| phone | Phone | ![phone] |
-| other-utilities | Other Utilities | ![other-utilities] |
-| entertainment | Entertainment | ![entertainment] |
-| shopping | Shopping | ![shopping] |
-| health | Health | ![health] |
-| other-expense | Other Expense | ![other-expense] |
+| food | Food & Dining | 🍔 |
+| gas | Gas | ⛽ |
+| repair | Repair & Maintenance | 🔧 |
+| electricity | Electricity | ⚡ |
+| water | Water | 💧 |
+| internet | Internet | 🌐 |
+| phone | Phone | 📱 |
+| other-utilities | Other Utilities | 🔌 |
+| entertainment | Entertainment | 🎬 |
+| shopping | Shopping | 🛍️ |
+| health | Health | 🏥 |
+| other-expense | Other Expense | 📦 |
+
+### Sample Transactions
+
+Seeded transactions are distributed across all four payment modes (Cash, GCash, BDO Savings, CBS Checking) for realistic demo data.
+
+## Migrations
+
+| Migration | Date | Description |
+|-----------|------|-------------|
+| `20260209085304_init` | Feb 2026 | Initial schema with Transaction and Category models |
+| `20260210035519_add_payment_mode` | Feb 2026 | Added `PaymentMode` enum, `paymentMode` field (default: `cash`), and index |
 
 ## Database Rules
 
@@ -149,10 +183,11 @@ The database is seeded with **16 default categories**:
 1. **Primary Keys**: Always use CUID (`@default(cuid())`) for IDs
 2. **Timestamps**: Every model must include `createdAt` and `updatedAt`
 3. **Naming**: Model names in PascalCase, column names in camelCase
-4. **Enums**: Use Prisma enums for fixed value sets
+4. **Enums**: Use Prisma enums for fixed value sets (e.g., `TransactionType`, `PaymentMode`)
 5. **Indexes**: Add indexes on columns used in WHERE, ORDER BY, or JOIN clauses
 6. **Relations**: Always define explicit foreign key constraints
 7. **Deletion**: Use `onDelete: Restrict` to prevent orphaned records
+8. **Defaults**: Use `@default()` for fields that have sensible defaults (e.g., `paymentMode @default(cash)`)
 
 ### Query Rules
 
@@ -195,7 +230,7 @@ npx prisma migrate dev --name add-new-field
 npx prisma migrate reset
 
 # Seed the database
-npx prisma db seed
+npx tsx -r dotenv/config prisma/seed.ts
 
 # Open Prisma Studio (GUI)
 npx prisma studio

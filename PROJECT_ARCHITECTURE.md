@@ -22,6 +22,7 @@ income-expense-app/
 │   ├── add-transaction-dialog.tsx  # Create transaction modal
 │   ├── edit-transaction-dialog.tsx # Edit transaction modal
 │   ├── category-management-dialog.tsx # Category admin panel
+│   ├── payment-mode-summary.tsx    # Cash flow report by payment mode (with filtering)
 │   ├── transaction-list.tsx        # Recent transactions display
 │   ├── overview-chart.tsx          # Area chart (monthly income vs expenses)
 │   ├── category-chart.tsx          # Pie chart (expenses by category)
@@ -35,9 +36,9 @@ income-expense-app/
 │
 ├── lib/                            # Shared utilities & configuration
 │   ├── prisma.ts                  # Prisma client singleton with connection pooling
-│   ├── types.ts                   # TypeScript type definitions
+│   ├── types.ts                   # TypeScript type definitions (Transaction, PaymentMode, etc.)
 │   ├── utils.ts                   # Utility functions (cn helper)
-│   ├── data.ts                    # Sample data & category mappings
+│   ├── data.ts                    # Sample data, category mappings & payment mode labels/icons
 │   └── generated/prisma/          # Auto-generated Prisma client types
 │
 ├── prisma/                         # Database layer
@@ -101,6 +102,7 @@ Response → revalidatePath('/') → UI Update
 | `deleteTransaction()` | transactions.ts | Delete a transaction by ID |
 | `getMonthlyStats()` | transactions.ts | Last 6 months income/expense aggregation |
 | `getCategoryStats()` | transactions.ts | Expense breakdown by category |
+| `getPaymentModeStats()` | transactions.ts | Income/expense/net flow per payment mode |
 | `getCategories()` | categories.ts | Fetch all categories |
 | `getCategoriesByType()` | categories.ts | Filter categories by income/expense |
 | `createCategory()` | categories.ts | Create a new category |
@@ -110,7 +112,8 @@ Response → revalidatePath('/') → UI Update
 ## State Management
 
 - **No external state library** — uses React `useState` and `useEffect`
-- Dashboard component manages global app state (transactions, monthly data, totals)
+- Dashboard component manages global app state (transactions, monthly data, totals, payment mode stats)
+- `selectedPaymentMode` state filters the transaction list by payment mode
 - Data is fetched on mount and refreshed after mutations via callback props
 
 ## Rendering Strategy

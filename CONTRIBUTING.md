@@ -140,6 +140,15 @@ npx shadcn@latest add <component-name>
 
 This installs the component into `components/ui/`.
 
+### Adding a New Payment Mode
+
+1. Add the value to the `PaymentMode` enum in `prisma/schema.prisma`
+2. Run migration: `npx prisma migrate dev --name add-new-payment-mode`
+3. Regenerate client: `npx prisma generate`
+4. Add the value to `PaymentMode` type in `lib/types.ts`
+5. Add label and icon to `paymentModeLabels` and `paymentModeIcons` in `lib/data.ts`
+6. Update seed script if needed: `prisma/seed.ts`
+
 ### Modifying the Database Schema
 
 1. Edit `prisma/schema.prisma`
@@ -167,7 +176,9 @@ Before submitting a pull request, verify:
 
 - [ ] Code compiles without errors (`npm run build`)
 - [ ] Linter passes (`npm run lint`)
-- [ ] All CRUD operations work correctly
+- [ ] All CRUD operations work correctly (including payment mode selection)
+- [ ] Payment mode summary cards display correct totals
+- [ ] Payment mode filtering works on the transaction list
 - [ ] Both light and dark themes render properly
 - [ ] Responsive design works on mobile and desktop
 - [ ] No `.env` files or secrets are committed

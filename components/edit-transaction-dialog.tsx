@@ -21,7 +21,8 @@ import {
 } from "@/components/ui/select"
 import { updateTransaction } from "@/app/actions/transactions"
 import { getCategoriesByType } from "@/app/actions/categories"
-import type { Transaction, TransactionType } from "@/lib/types"
+import type { Transaction, TransactionType, PaymentMode } from "@/lib/types"
+import { paymentModeLabels, paymentModeIcons } from "@/lib/data"
 import { Save } from "lucide-react"
 import { toast } from "sonner"
 
@@ -52,6 +53,7 @@ export function EditTransactionDialog({
   const [categoryId, setCategoryId] = useState<string>(
     (transaction as any).categoryId || ""
   )
+  const [paymentMode, setPaymentMode] = useState<PaymentMode>(transaction.paymentMode || "cash")
   const [date, setDate] = useState(transaction.date)
   const [loading, setLoading] = useState(false)
   const [categories, setCategories] = useState<Category[]>([])
@@ -81,6 +83,7 @@ export function EditTransactionDialog({
       setType(transaction.type)
       setDescription(transaction.description)
       setAmount(transaction.amount.toString())
+      setPaymentMode(transaction.paymentMode || "cash")
       setDate(transaction.date)
       setCategoryId((transaction as any).categoryId || "")
     }
@@ -109,6 +112,7 @@ export function EditTransactionDialog({
         description,
         amount: Number.parseFloat(amount),
         type,
+        paymentMode,
         category: "", // Not used when categoryId is provided
         categoryId,
         date,
@@ -217,6 +221,25 @@ export function EditTransactionDialog({
                     </SelectItem>
                   ))
                 )}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="paymentMode">Payment Mode</Label>
+            <Select value={paymentMode} onValueChange={(val) => setPaymentMode(val as PaymentMode)}>
+              <SelectTrigger className="border-border/50 bg-secondary">
+                <SelectValue placeholder="Select payment mode" />
+              </SelectTrigger>
+              <SelectContent className="border-border/50 bg-card">
+                {Object.entries(paymentModeLabels).map(([value, label]) => (
+                  <SelectItem key={value} value={value}>
+                    <span className="flex items-center gap-2">
+                      <span>{paymentModeIcons[value]}</span>
+                      <span>{label}</span>
+                    </span>
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

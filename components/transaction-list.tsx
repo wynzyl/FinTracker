@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { categoryLabels, categoryIcons } from "@/lib/data"
+import { categoryLabels, categoryIcons, paymentModeLabels } from "@/lib/data"
 import { deleteTransaction } from "@/app/actions/transactions"
 import { EditTransactionDialog } from "@/components/edit-transaction-dialog"
 import type { Transaction } from "@/lib/types"
@@ -100,6 +100,7 @@ export function TransactionList({ transactions, onDelete }: TransactionListProps
                       <p className="font-medium">{transaction.description}</p>
                       <p className="text-sm text-muted-foreground">
                         {(transaction as any).categoryLabel || categoryLabels[transaction.category] || transaction.category} •{" "}
+                        {paymentModeLabels[transaction.paymentMode] || "Cash"} •{" "}
                         {new Date(transaction.date).toLocaleDateString("en-US", {
                           month: "short",
                           day: "numeric",

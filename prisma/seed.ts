@@ -115,6 +115,7 @@ async function main() {
         description: transaction.description,
         amount: transaction.amount,
         type: transaction.type,
+        paymentMode: transaction.paymentMode || 'cash',
         categoryId,
         date: new Date(transaction.date),
       },

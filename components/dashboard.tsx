@@ -6,22 +6,26 @@ import { StatCard } from "@/components/stat-card"
 import { OverviewChart } from "@/components/overview-chart"
 import { TransactionList } from "@/components/transaction-list"
 import { CategoryChart } from "@/components/category-chart"
-import { getTransactions, getMonthlyStats, getTotalExpensesFromDB } from "@/app/actions/transactions"
-import type { Transaction } from "@/lib/types"
+import { PaymentModeSummary } from "@/components/payment-mode-summary"
+import { getTransactions, getMonthlyStats, getTotalExpensesFromDB, getPaymentModeStats } from "@/app/actions/transactions"
+import type { Transaction, PaymentModeSummary as PaymentModeSummaryType, PaymentMode } from "@/lib/types"
 
 export function Dashboard() {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [monthlyData, setMonthlyData] = useState<{ month: string; income: number; expenses: number }[]>([])
   const [dbTotalExpenses, setDbTotalExpenses] = useState<number>(0)
+  const [paymentModeData, setPaymentModeData] = useState<PaymentModeSummaryType[]>([])
+  const [selectedPaymentMode, setSelectedPaymentMode] = useState<PaymentMode | "all">("all")
   const [loading, setLoading] = useState(true)
 
   const loadData = async () => {
     try {
       setLoading(true)
-      const [transactionsData, monthlyStats, dbTotalExpenses] = await Promise.all([
+      const [transactionsData, monthlyStats, dbTotalExpenses, paymentModeStats] = await Promise.all([
         getTransactions(),
         getMonthlyStats(),
         getTotalExpensesFromDB(),
+        getPaymentModeStats(),
       ])
       console.log('Loaded transactions:', transactionsData.length)
       console.log('Income transactions:', transactionsData.filter(t => t.type === 'income').length)
@@ -30,6 +34,7 @@ export function Dashboard() {
       setTransactions(transactionsData)
       setMonthlyData(monthlyStats)
       setDbTotalExpenses(dbTotalExpenses.total)
+      setPaymentModeData(paymentModeStats)
     } catch (error) {
       console.error('Error loading data:', error)
       // Set empty arrays on error to prevent UI issues
@@ -47,10 +52,11 @@ export function Dashboard() {
   const handleRefresh = async () => {
     try {
       // Refresh data without showing full loading screen
-      const [transactionsData, monthlyStats, dbTotalExpenses] = await Promise.all([
+      const [transactionsData, monthlyStats, dbTotalExpenses, paymentModeStats] = await Promise.all([
         getTransactions(),
         getMonthlyStats(),
         getTotalExpensesFromDB(),
+        getPaymentModeStats(),
       ])
       console.log('Refreshed transactions:', transactionsData.length)
       console.log('Income transactions:', transactionsData.filter(t => t.type === 'income').length)
@@ -59,6 +65,7 @@ export function Dashboard() {
       setTransactions(transactionsData)
       setMonthlyData(monthlyStats)
       setDbTotalExpenses(dbTotalExpenses.total)
+      setPaymentModeData(paymentModeStats)
     } catch (error) {
       console.error('Error refreshing data:', error)
     }
@@ -182,9 +189,25 @@ export function Dashboard() {
           <CategoryChart transactions={transactions} />
         </div>
 
+        {/* Payment Mode Summary */}
+        <div className="mt-8">
+          <PaymentModeSummary
+            data={paymentModeData}
+            selectedMode={selectedPaymentMode}
+            onModeSelect={setSelectedPaymentMode}
+          />
+        </div>
+
         {/* Transaction List */}
         <div className="mt-8">
-          <TransactionList transactions={transactions} onDelete={handleDeleteTransaction} />
+          <TransactionList
+            transactions={
+              selectedPaymentMode === "all"
+                ? transactions
+                : transactions.filter((t) => t.paymentMode === selectedPaymentMode)
+            }
+            onDelete={handleDeleteTransaction}
+          />
         </div>
       </main>
     </div>

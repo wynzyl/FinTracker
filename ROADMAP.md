@@ -2,6 +2,18 @@
 
 Planned features and improvements for Yamban FinTracker.
 
+## Completed
+
+### Payment Mode Feature (Feb 2026)
+
+- [x] Add `PaymentMode` enum to database schema (Cash, GCash, BDO Savings, CBS Checking)
+- [x] Payment mode field on all transactions (with `@default(cash)` for existing data)
+- [x] Payment mode selector in add/edit transaction dialogs
+- [x] Payment mode label displayed in transaction list
+- [x] Cash Flow by Payment Mode summary report on dashboard
+- [x] Filter transaction list by clicking a payment mode card
+- [x] `getPaymentModeStats()` server action for aggregated reporting
+
 ## Phase 1: Foundation Hardening (Current)
 
 Focus: Stability, code quality, and developer experience.
@@ -31,6 +43,7 @@ Focus: Better data entry and filtering.
 - [ ] Date range filtering on dashboard
 - [ ] Search transactions by description
 - [ ] Filter transactions by category and type
+- [ ] Combined filters (payment mode + category + date range)
 - [ ] Pagination for transaction list
 - [ ] Bulk delete transactions
 - [ ] Recurring/scheduled transactions
@@ -55,6 +68,7 @@ Focus: Data portability and reporting.
 - [ ] Import transactions from CSV
 - [ ] Bank statement import (OFX/QIF format)
 - [ ] Printable monthly reports
+- [ ] Payment mode summary export
 
 ## Phase 6: Advanced Analytics
 
@@ -64,10 +78,21 @@ Focus: Deeper financial insights.
 - [ ] Spending trends and predictions
 - [ ] Category spending heatmap
 - [ ] Income vs expense ratio over time
+- [ ] Cash flow trends by payment mode over time
 - [ ] Custom date range reports
 - [ ] Weekly/monthly/yearly view toggle
 
-## Phase 7: Mobile & PWA
+## Phase 7: Payment Mode Enhancements
+
+Focus: Extend the payment mode system.
+
+- [ ] Custom payment modes (user-defined, migrate from enum to separate table)
+- [ ] Payment mode icons customization
+- [ ] Payment mode-specific charts (bar chart, trend line)
+- [ ] Default payment mode per category (auto-select)
+- [ ] Payment mode balance tracking (running balance per account)
+
+## Phase 8: Mobile & PWA
 
 Focus: Mobile-first experience.
 
@@ -77,7 +102,7 @@ Focus: Mobile-first experience.
 - [ ] Mobile-optimized transaction entry
 - [ ] Home screen installability
 
-## Phase 8: Integrations
+## Phase 9: Integrations
 
 Focus: Connect with external services.
 

@@ -13,19 +13,21 @@ datasource db {
 }
 
 model Transaction {
-  id          String   @id @default(cuid())
+  id          String      @id @default(cuid())
   description String
   amount      Float
   type        TransactionType
+  paymentMode PaymentMode @default(cash)
   categoryId  String
-  category    Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  date        DateTime @default(now())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  category    Category    @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  date        DateTime    @default(now())
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
   @@index([type])
   @@index([categoryId])
   @@index([date])
+  @@index([paymentMode])
 }
 
 model Category {
@@ -45,4 +47,11 @@ model Category {
 enum TransactionType {
   income
   expense
+}
+
+enum PaymentMode {
+  cash
+  gcash
+  bdo_savings
+  cbs_checking
 }
