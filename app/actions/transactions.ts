@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import type { Transaction, Category, TransactionType } from '@/lib/types'
+import { createTransactionSchema, updateTransactionSchema } from '@/lib/schemas'
 
 /**
  * Fetch all transactions from the database
@@ -54,6 +55,11 @@ export async function getTransactions(): Promise<Transaction[]> {
  * Accepts either categoryId or category name (for backward compatibility)
  */
 export async function createTransaction(data: Omit<Transaction, 'id' | 'categoryId' | 'categoryLabel' | 'categoryIcon'> & { categoryId?: string }) {
+  const parsed = createTransactionSchema.safeParse(data)
+  if (!parsed.success) {
+    throw new Error(parsed.error.errors.map(e => e.message).join(', '))
+  }
+
   try {
     let categoryId: string
 
@@ -110,6 +116,11 @@ export async function updateTransaction(
   id: string,
   data: Omit<Transaction, 'id' | 'categoryId' | 'categoryLabel' | 'categoryIcon'> & { categoryId?: string }
 ) {
+  const parsed = updateTransactionSchema.safeParse(data)
+  if (!parsed.success) {
+    throw new Error(parsed.error.errors.map(e => e.message).join(', '))
+  }
+
   try {
     let categoryId: string
 
