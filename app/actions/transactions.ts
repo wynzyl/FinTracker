@@ -309,15 +309,20 @@ export async function getPaymentModeStats(): Promise<PaymentModeSummary[]> {
       },
     })
 
+    const defaultEntry = () => ({ income: 0, expenses: 0, count: 0 })
     const modeMap = new Map<string, { income: number; expenses: number; count: number }>()
 
-    const allModes = ['cash', 'gcash', 'bdo_savings', 'cbs_checking']
+    const allModes = Object.keys(paymentModeLabels)
     allModes.forEach(mode => {
-      modeMap.set(mode, { income: 0, expenses: 0, count: 0 })
+      modeMap.set(mode, defaultEntry())
     })
 
     transactions.forEach((t) => {
-      const entry = modeMap.get(t.paymentMode)!
+      let entry = modeMap.get(t.paymentMode)
+      if (!entry) {
+        entry = defaultEntry()
+        modeMap.set(t.paymentMode, entry)
+      }
       entry.count++
       if (t.type === 'income') {
         entry.income += t.amount
@@ -327,7 +332,7 @@ export async function getPaymentModeStats(): Promise<PaymentModeSummary[]> {
     })
 
     return allModes.map(mode => {
-      const data = modeMap.get(mode)!
+      const data = modeMap.get(mode) ?? defaultEntry()
       return {
         paymentMode: mode as PaymentMode,
         label: paymentModeLabels[mode],

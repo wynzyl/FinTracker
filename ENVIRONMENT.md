@@ -2,84 +2,97 @@
 
 ## Required Environment Variables
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `DATABASE_URL` | Yes | PostgreSQL connection string |
+| Variable | Required | Used By | Description |
+|----------|----------|---------|-------------|
+| `DATABASE_URL` | Yes | Next.js / Prisma | PostgreSQL connection string for the application |
+| `POSTGRES_PASSWORD` | Yes | Docker Compose | PostgreSQL password (referenced by `docker-compose.yml`) |
+| `POSTGRES_USER` | No | Docker Compose | PostgreSQL user (defaults to `postgres`) |
+| `POSTGRES_DB` | No | Docker Compose | PostgreSQL database name (defaults to `FintrackerDB`) |
 
 ## Environment Files
 
 | File | Purpose | Committed to Git |
 |------|---------|-----------------|
-| `.env` | Local development variables | No |
+| `.env` | Local development variables and Docker secrets | No |
+| `.env.example` | Template with placeholder values for new developers | Yes |
 | `.env.production` | Production overrides | No |
 
-## DATABASE_URL Format
+## Setup Instructions
+
+### 1. Create the `.env` File
+
+Copy the example file and fill in your password:
+
+```bash
+cp .env.example .env
+```
+
+Then edit `.env` and replace `your_password_here` with your actual password:
+
+```env
+# PostgreSQL credentials (used by docker-compose.yml)
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=your_password_here
+POSTGRES_DB=FintrackerDB
+
+# Application database connection (used by Next.js / Prisma)
+DATABASE_URL="postgresql://postgres:your_password_here@localhost:5433/FintrackerDB"
+```
+
+### 2. How Variables Are Used
+
+**Docker Compose** reads `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB` from `.env` via variable substitution (`${POSTGRES_PASSWORD}`). These configure the PostgreSQL container and build the app container's `DATABASE_URL`.
+
+**Next.js / Prisma** reads `DATABASE_URL` from `.env` for local development (running outside Docker). When running inside Docker, the app container gets its `DATABASE_URL` from the compose environment.
+
+### 3. DATABASE_URL Format
 
 ```
 postgresql://<username>:<password>@<host>:<port>/<database>
 ```
 
-### Examples
+#### Examples
 
-**Local PostgreSQL:**
+**Local dev (host machine to Docker PostgreSQL):**
 ```env
-DATABASE_URL="postgresql://postgres:yourpassword@localhost:5432/FintrackerDB"
+DATABASE_URL="postgresql://postgres:yourpassword@localhost:5433/FintrackerDB"
 ```
 
-**Docker (app container accessing host DB):**
-```env
-DATABASE_URL="postgresql://postgres:yourpassword@host.docker.internal:5432/FintrackerDB"
+**Inside Docker (app container to db container):**
 ```
+DATABASE_URL=postgresql://postgres:yourpassword@db:5432/FintrackerDB
+```
+This is automatically constructed by `docker-compose.yml` from the `POSTGRES_*` variables.
 
 **Neon (cloud PostgreSQL):**
 ```env
 DATABASE_URL="postgresql://neondb_owner:password@ep-xxx.region.aws.neon.tech/neondb?sslmode=require"
 ```
 
-## Setup Instructions
-
-### 1. Create the `.env` File
-
-Copy the template below into a `.env` file at the project root:
-
-```env
-# PostgreSQL connection string
-DATABASE_URL="postgresql://postgres:yourpassword@localhost:5432/FintrackerDB"
-```
-
-### 2. Configure for Your Environment
-
-**Local Development (without Docker):**
-- Install PostgreSQL locally
-- Create a database named `FintrackerDB`
-- Set the connection string to point to `localhost:5432`
-
-**Local Development (with Docker):**
-- Use `host.docker.internal` instead of `localhost` for the host
-- The app container maps port `3001` (host) to `3000` (container)
-
-**Cloud Database (Neon, Supabase, etc.):**
-- Use the connection string provided by your cloud provider
-- Append `?sslmode=require` for SSL connections
-
-### 3. Initialize the Database
+### 4. Initialize the Database
 
 ```bash
 # Apply schema migrations
 npx prisma migrate dev
 
 # Seed with default categories and sample data
-npx prisma db seed
+npx tsx -r dotenv/config prisma/seed.ts
 ```
 
 ## Docker Environment
 
-When running with Docker Compose, the `.env` file is automatically loaded. The Docker setup uses:
+Docker Compose reads the `.env` file automatically. The compose file uses variable substitution with defaults:
 
-- **Node.js 22 Alpine** as the base image
-- **Port mapping**: `3001` (host) → `3000` (container)
-- **Volume mounts**: Source code and persistent `node_modules`
-- **Network**: Uses `host.docker.internal` to reach the host machine's PostgreSQL
+```yaml
+environment:
+  - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-FintrackerDB}
+  - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+```
+
+This means:
+- `POSTGRES_PASSWORD` is **required** in `.env` (no default)
+- `POSTGRES_USER` defaults to `postgres` if not set
+- `POSTGRES_DB` defaults to `FintrackerDB` if not set
 
 ```bash
 # Start the application with Docker
@@ -93,18 +106,25 @@ docker-compose up --build
 
 | Service | Default Port |
 |---------|-------------|
-| Next.js Dev Server | 3001 |
+| Next.js Dev Server (host) | 3001 |
 | Next.js (inside Docker) | 3000 |
-| PostgreSQL | 5432 |
+| PostgreSQL (host) | 5433 |
+| PostgreSQL (inside Docker) | 5432 |
 | Prisma Studio | 5555 |
 
 ## Troubleshooting
 
 ### Connection Refused
 
-- Verify PostgreSQL is running: `pg_isready -h localhost -p 5432`
+- Verify PostgreSQL is running: `docker-compose ps`
 - Check the `DATABASE_URL` format (no extra quotes or whitespace)
-- For Docker, ensure `host.docker.internal` resolves correctly
+- For host-to-Docker connections, use `localhost:5433` (the mapped port)
+- For container-to-container connections, use `db:5432` (the internal port)
+
+### Docker Compose Fails with Empty Password
+
+- Ensure `POSTGRES_PASSWORD` is set in your `.env` file
+- Docker Compose reads `.env` automatically from the project root
 
 ### Migration Errors
 
