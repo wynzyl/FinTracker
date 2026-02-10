@@ -14,10 +14,12 @@ export function Dashboard() {
   const [monthlyData, setMonthlyData] = useState<{ month: string; income: number; expenses: number }[]>([])
   const [dbTotalExpenses, setDbTotalExpenses] = useState<number>(0)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const loadData = async () => {
     try {
       setLoading(true)
+      setError(null)
       const [transactionsData, monthlyStats, dbTotalExpenses] = await Promise.all([
         getTransactions(),
         getMonthlyStats(),
@@ -26,9 +28,9 @@ export function Dashboard() {
       setTransactions(transactionsData)
       setMonthlyData(monthlyStats)
       setDbTotalExpenses(dbTotalExpenses.total)
-    } catch (error) {
-      console.error('Error loading data:', error)
-      // Set empty arrays on error to prevent UI issues
+    } catch (err) {
+      console.error('Error loading data:', err)
+      setError(err instanceof Error ? err.message : 'Failed to load dashboard data')
       setTransactions([])
       setMonthlyData([])
     } finally {
@@ -83,6 +85,22 @@ export function Dashboard() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-muted-foreground">Loading...</div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <p className="text-destructive font-medium">{error}</p>
+          <button
+            onClick={loadData}
+            className="text-sm text-muted-foreground underline hover:text-foreground"
+          >
+            Try again
+          </button>
+        </div>
       </div>
     )
   }

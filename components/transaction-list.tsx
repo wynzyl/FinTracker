@@ -61,7 +61,11 @@ export function TransactionList({ transactions, onDelete }: TransactionListProps
 
     setDeletingId(transactionToDelete)
     try {
-      await deleteTransaction(transactionToDelete)
+      const result = await deleteTransaction(transactionToDelete)
+      if (!result.success) {
+        toast.error(result.error)
+        return
+      }
       toast.success("Transaction deleted successfully")
       onDelete()
     } catch (error) {
