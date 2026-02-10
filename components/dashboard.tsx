@@ -7,6 +7,7 @@ import { OverviewChart } from "@/components/overview-chart"
 import { TransactionList } from "@/components/transaction-list"
 import { CategoryChart } from "@/components/category-chart"
 import { getTransactions, getMonthlyStats, getTotalExpensesFromDB } from "@/app/actions/transactions"
+import { DashboardSkeleton } from "@/components/dashboard-skeleton"
 import type { Transaction } from "@/lib/types"
 
 export function Dashboard() {
@@ -82,11 +83,7 @@ export function Dashboard() {
   const balanceChange = 15.3
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
-      </div>
-    )
+    return <DashboardSkeleton />
   }
 
   if (error) {
