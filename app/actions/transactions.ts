@@ -101,6 +101,7 @@ export async function createTransaction(data: Omit<Transaction, 'id' | 'category
     })
 
     revalidatePath('/')
+    revalidatePath('/transactions')
     return { success: true, data: { id: transaction.id } }
   } catch (error) {
     console.error('Error creating transaction:', error)
@@ -160,6 +161,7 @@ export async function updateTransaction(
     })
 
     revalidatePath('/')
+    revalidatePath('/transactions')
     return { success: true, data: { id: transaction.id } }
   } catch (error) {
     console.error('Error updating transaction:', error)
@@ -177,6 +179,7 @@ export async function deleteTransaction(id: string): Promise<ActionResult> {
     })
 
     revalidatePath('/')
+    revalidatePath('/transactions')
     return { success: true, data: undefined }
   } catch (error) {
     console.error('Error deleting transaction:', error)
