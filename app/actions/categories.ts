@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import type { TransactionType } from '@/lib/types'
+import { createCategorySchema, updateCategorySchema } from '@/lib/schemas'
 
 export interface CategoryData {
   id?: string
@@ -65,6 +66,11 @@ export async function getCategory(id: string) {
  * Create a new category
  */
 export async function createCategory(data: Omit<CategoryData, 'id'>) {
+  const parsed = createCategorySchema.safeParse(data)
+  if (!parsed.success) {
+    throw new Error(parsed.error.errors.map(e => e.message).join(', '))
+  }
+
   try {
     // Check if category name already exists
     const existing = await prisma.category.findUnique({
@@ -101,6 +107,11 @@ export async function createCategory(data: Omit<CategoryData, 'id'>) {
  * Update an existing category
  */
 export async function updateCategory(id: string, data: Omit<CategoryData, 'id'>) {
+  const parsed = updateCategorySchema.safeParse(data)
+  if (!parsed.success) {
+    throw new Error(parsed.error.errors.map(e => e.message).join(', '))
+  }
+
   try {
     // Check if another category with the same name exists
     const existing = await prisma.category.findFirst({

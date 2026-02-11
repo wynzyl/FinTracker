@@ -24,6 +24,9 @@ export interface Transaction {
   amount: number
   type: TransactionType
   category: Category
+  categoryId: string
+  categoryLabel: string
+  categoryIcon: string | null
   date: string
 }
 
