@@ -218,7 +218,7 @@ export async function getMonthlyStats() {
     // Convert to array and sort by date (most recent first)
     const monthlyData = Array.from(monthlyMap.entries())
       .map(([key, data]) => ({
-        month: new Date(key + '-01').toLocaleDateString('en-US', { month: 'short' }),
+        month: new Date(key + '-01').toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' }),
         income: data.income,
         expenses: data.expenses,
       }))
