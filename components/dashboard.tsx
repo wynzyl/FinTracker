@@ -6,6 +6,7 @@ import { StatCard } from "@/components/stat-card"
 import { OverviewChart } from "@/components/overview-chart"
 import { TransactionList } from "@/components/transaction-list"
 import { CategoryChart } from "@/components/category-chart"
+import { PaymentModeChart } from "@/components/payment-mode-chart"
 import { getTransactions, getMonthlyStats, getTotalExpensesFromDB } from "@/app/actions/transactions"
 import { DashboardSkeleton } from "@/components/dashboard-skeleton"
 import type { Transaction } from "@/lib/types"
@@ -137,6 +138,11 @@ export function Dashboard() {
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
           <OverviewChart data={monthlyData} />
           <CategoryChart transactions={transactions} />
+        </div>
+
+        {/* Payment Mode Summary */}
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <PaymentModeChart transactions={transactions} />
         </div>
 
         {/* Transaction List */}

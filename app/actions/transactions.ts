@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
-import type { Transaction, Category, TransactionType, ActionResult } from '@/lib/types'
+import type { Transaction, Category, TransactionType, PaymentMode, ActionResult } from '@/lib/types'
 import { createTransactionSchema, updateTransactionSchema } from '@/lib/schemas'
 
 /**
@@ -42,6 +42,7 @@ export async function getTransactions(): Promise<Transaction[]> {
         categoryLabel,
         categoryIcon,
         date: t.date.toISOString().split('T')[0],
+        paymentMode: (t.paymentMode || 'cash') as PaymentMode,
       }
     })
   } catch (error) {
@@ -95,6 +96,7 @@ export async function createTransaction(data: Omit<Transaction, 'id' | 'category
         type: data.type,
         categoryId,
         date: new Date(data.date),
+        paymentMode: data.paymentMode,
       },
     })
 
@@ -153,6 +155,7 @@ export async function updateTransaction(
         type: data.type,
         categoryId,
         date: new Date(data.date),
+        paymentMode: data.paymentMode,
       },
     })
 

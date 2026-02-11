@@ -22,7 +22,8 @@ import {
 } from "@/components/ui/select"
 import { createTransaction } from "@/app/actions/transactions"
 import { getCategoriesByType } from "@/app/actions/categories"
-import type { TransactionType } from "@/lib/types"
+import type { TransactionType, PaymentMode } from "@/lib/types"
+import { paymentModeLabels } from "@/lib/types"
 import { Plus } from "lucide-react"
 import { toast } from "sonner"
 
@@ -45,6 +46,7 @@ export function AddTransactionDialog({ onTransactionAdded }: AddTransactionDialo
   const [amount, setAmount] = useState("")
   const [categoryId, setCategoryId] = useState<string>("")
   const [date, setDate] = useState(new Date().toISOString().split("T")[0])
+  const [paymentMode, setPaymentMode] = useState<PaymentMode>("cash")
   const [loading, setLoading] = useState(false)
   const [categories, setCategories] = useState<Category[]>([])
 
@@ -83,6 +85,7 @@ export function AddTransactionDialog({ onTransactionAdded }: AddTransactionDialo
         category: "other-expense", // Not used when categoryId is provided
         categoryId,
         date,
+        paymentMode,
       })
 
       if (!result.success) {
@@ -97,6 +100,7 @@ export function AddTransactionDialog({ onTransactionAdded }: AddTransactionDialo
       setAmount("")
       setCategoryId("")
       setDate(new Date().toISOString().split("T")[0])
+      setPaymentMode("cash")
       setOpen(false)
 
       // Refresh dashboard data
@@ -203,6 +207,22 @@ export function AddTransactionDialog({ onTransactionAdded }: AddTransactionDialo
                     </SelectItem>
                   ))
                 )}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="paymentMode">Payment Mode</Label>
+            <Select value={paymentMode} onValueChange={(value) => setPaymentMode(value as PaymentMode)}>
+              <SelectTrigger className="border-border/50 bg-secondary">
+                <SelectValue placeholder="Select payment mode" />
+              </SelectTrigger>
+              <SelectContent className="border-border/50 bg-card">
+                {(Object.entries(paymentModeLabels) as [PaymentMode, string][]).map(([value, label]) => (
+                  <SelectItem key={value} value={value}>
+                    {label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

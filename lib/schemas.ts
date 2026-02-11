@@ -7,6 +7,7 @@ export const createTransactionSchema = z.object({
   category: z.string(),
   categoryId: z.string().min(1, "Category is required").optional(),
   date: z.string().min(1, "Date is required"),
+  paymentMode: z.enum(["cash", "gcash", "bdo_savings", "cbs_checking"], { message: "Payment mode is required" }),
 })
 
 export const updateTransactionSchema = createTransactionSchema

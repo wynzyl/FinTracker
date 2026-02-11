@@ -8,6 +8,7 @@ import { categoryLabels, categoryIcons } from "@/lib/data"
 import { deleteTransaction } from "@/app/actions/transactions"
 import { EditTransactionDialog } from "@/components/edit-transaction-dialog"
 import type { Transaction } from "@/lib/types"
+import { paymentModeLabels } from "@/lib/types"
 import { ArrowUpRight, ArrowDownRight, Trash2, Edit } from "lucide-react"
 import { toast } from "sonner"
 import { useState } from "react"
@@ -104,6 +105,7 @@ export function TransactionList({ transactions, onDelete }: TransactionListProps
                       <p className="font-medium">{transaction.description}</p>
                       <p className="text-sm text-muted-foreground">
                         {transaction.categoryLabel || categoryLabels[transaction.category] || transaction.category} •{" "}
+                        {paymentModeLabels[transaction.paymentMode] || transaction.paymentMode} •{" "}
                         {new Date(transaction.date).toLocaleDateString("en-US", {
                           month: "short",
                           day: "numeric",

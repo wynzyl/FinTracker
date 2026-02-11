@@ -1,5 +1,14 @@
 export type TransactionType = "income" | "expense"
 
+export type PaymentMode = "cash" | "gcash" | "bdo_savings" | "cbs_checking"
+
+export const paymentModeLabels: Record<PaymentMode, string> = {
+  cash: "Cash",
+  gcash: "GCash",
+  bdo_savings: "BDO Savings",
+  cbs_checking: "CBS Checking",
+}
+
 export type Category =
   | "salary"
   | "freelance"
@@ -28,6 +37,7 @@ export interface Transaction {
   categoryLabel: string
   categoryIcon: string | null
   date: string
+  paymentMode: PaymentMode
 }
 
 export interface CategorySummary {
