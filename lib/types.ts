@@ -35,3 +35,7 @@ export interface CategorySummary {
   amount: number
   percentage: number
 }
+
+export type ActionResult<T = void> =
+  | { success: true; data: T }
+  | { success: false; error: string }

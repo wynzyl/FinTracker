@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
-import type { Transaction, Category, TransactionType } from '@/lib/types'
+import type { Transaction, Category, TransactionType, ActionResult } from '@/lib/types'
 import { createTransactionSchema, updateTransactionSchema } from '@/lib/schemas'
 
 /**
@@ -54,10 +54,10 @@ export async function getTransactions(): Promise<Transaction[]> {
  * Create a new transaction
  * Accepts either categoryId or category name (for backward compatibility)
  */
-export async function createTransaction(data: Omit<Transaction, 'id' | 'categoryId' | 'categoryLabel' | 'categoryIcon'> & { categoryId?: string }) {
+export async function createTransaction(data: Omit<Transaction, 'id' | 'categoryId' | 'categoryLabel' | 'categoryIcon'> & { categoryId?: string }): Promise<ActionResult<{ id: string }>> {
   const parsed = createTransactionSchema.safeParse(data)
   if (!parsed.success) {
-    throw new Error(parsed.error.errors.map(e => e.message).join(', '))
+    return { success: false, error: parsed.error.errors.map(e => e.message).join(', ') }
   }
 
   try {
@@ -82,7 +82,7 @@ export async function createTransaction(data: Omit<Transaction, 'id' | 'category
       }
 
       if (!category) {
-        throw new Error(`Category "${data.category}" not found`)
+        return { success: false, error: `Category "${data.category}" not found` }
       }
 
       categoryId = category.id
@@ -99,13 +99,10 @@ export async function createTransaction(data: Omit<Transaction, 'id' | 'category
     })
 
     revalidatePath('/')
-    return { success: true, transaction }
+    return { success: true, data: { id: transaction.id } }
   } catch (error) {
     console.error('Error creating transaction:', error)
-    if (error instanceof Error) {
-      throw error
-    }
-    throw new Error('Failed to create transaction')
+    return { success: false, error: error instanceof Error ? error.message : 'Failed to create transaction' }
   }
 }
 
@@ -115,10 +112,10 @@ export async function createTransaction(data: Omit<Transaction, 'id' | 'category
 export async function updateTransaction(
   id: string,
   data: Omit<Transaction, 'id' | 'categoryId' | 'categoryLabel' | 'categoryIcon'> & { categoryId?: string }
-) {
+): Promise<ActionResult<{ id: string }>> {
   const parsed = updateTransactionSchema.safeParse(data)
   if (!parsed.success) {
-    throw new Error(parsed.error.errors.map(e => e.message).join(', '))
+    return { success: false, error: parsed.error.errors.map(e => e.message).join(', ') }
   }
 
   try {
@@ -142,7 +139,7 @@ export async function updateTransaction(
       }
 
       if (!category) {
-        throw new Error(`Category "${data.category}" not found`)
+        return { success: false, error: `Category "${data.category}" not found` }
       }
 
       categoryId = category.id
@@ -160,30 +157,27 @@ export async function updateTransaction(
     })
 
     revalidatePath('/')
-    return { success: true, transaction }
+    return { success: true, data: { id: transaction.id } }
   } catch (error) {
     console.error('Error updating transaction:', error)
-    if (error instanceof Error) {
-      throw error
-    }
-    throw new Error('Failed to update transaction')
+    return { success: false, error: error instanceof Error ? error.message : 'Failed to update transaction' }
   }
 }
 
 /**
  * Delete a transaction by ID
  */
-export async function deleteTransaction(id: string) {
+export async function deleteTransaction(id: string): Promise<ActionResult> {
   try {
     await prisma.transaction.delete({
       where: { id },
     })
 
     revalidatePath('/')
-    return { success: true }
+    return { success: true, data: undefined }
   } catch (error) {
     console.error('Error deleting transaction:', error)
-    throw new Error('Failed to delete transaction')
+    return { success: false, error: error instanceof Error ? error.message : 'Failed to delete transaction' }
   }
 }
 

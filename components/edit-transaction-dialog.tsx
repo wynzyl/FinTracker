@@ -105,7 +105,7 @@ export function EditTransactionDialog({
 
     setLoading(true)
     try {
-      await updateTransaction(transaction.id, {
+      const result = await updateTransaction(transaction.id, {
         description,
         amount: Number.parseFloat(amount),
         type,
@@ -114,18 +114,23 @@ export function EditTransactionDialog({
         date,
       })
 
+      if (!result.success) {
+        toast.error(result.error)
+        return
+      }
+
       toast.success("Transaction updated successfully!")
-      
+
       // Reset form and close dialog
       onOpenChange(false)
-      
+
       // Refresh dashboard data
       if (onTransactionUpdated) {
         onTransactionUpdated()
       }
     } catch (error) {
       console.error("Error updating transaction:", error)
-      toast.error(error instanceof Error ? error.message : "Failed to update transaction")
+      toast.error("Failed to update transaction")
     } finally {
       setLoading(false)
     }

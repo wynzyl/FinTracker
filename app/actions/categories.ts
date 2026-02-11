@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
-import type { TransactionType } from '@/lib/types'
+import type { TransactionType, ActionResult } from '@/lib/types'
 import { createCategorySchema, updateCategorySchema } from '@/lib/schemas'
 
 export interface CategoryData {
@@ -65,10 +65,10 @@ export async function getCategory(id: string) {
 /**
  * Create a new category
  */
-export async function createCategory(data: Omit<CategoryData, 'id'>) {
+export async function createCategory(data: Omit<CategoryData, 'id'>): Promise<ActionResult<{ id: string }>> {
   const parsed = createCategorySchema.safeParse(data)
   if (!parsed.success) {
-    throw new Error(parsed.error.errors.map(e => e.message).join(', '))
+    return { success: false, error: parsed.error.errors.map(e => e.message).join(', ') }
   }
 
   try {
@@ -78,11 +78,9 @@ export async function createCategory(data: Omit<CategoryData, 'id'>) {
     })
 
     if (existing) {
-      throw new Error('Category with this name already exists')
+      return { success: false, error: 'Category with this name already exists' }
     }
 
-    // Build category data - use empty string as fallback if database column is NOT NULL
-    // TODO: Run `npx prisma db push` to update database schema to allow null icons
     const category = await prisma.category.create({
       data: {
         name: data.name,
@@ -93,23 +91,20 @@ export async function createCategory(data: Omit<CategoryData, 'id'>) {
     })
 
     revalidatePath('/')
-    return { success: true, category }
+    return { success: true, data: { id: category.id } }
   } catch (error) {
     console.error('Error creating category:', error)
-    if (error instanceof Error) {
-      throw error
-    }
-    throw new Error('Failed to create category')
+    return { success: false, error: error instanceof Error ? error.message : 'Failed to create category' }
   }
 }
 
 /**
  * Update an existing category
  */
-export async function updateCategory(id: string, data: Omit<CategoryData, 'id'>) {
+export async function updateCategory(id: string, data: Omit<CategoryData, 'id'>): Promise<ActionResult<{ id: string }>> {
   const parsed = updateCategorySchema.safeParse(data)
   if (!parsed.success) {
-    throw new Error(parsed.error.errors.map(e => e.message).join(', '))
+    return { success: false, error: parsed.error.errors.map(e => e.message).join(', ') }
   }
 
   try {
@@ -122,11 +117,9 @@ export async function updateCategory(id: string, data: Omit<CategoryData, 'id'>)
     })
 
     if (existing) {
-      throw new Error('Category with this name already exists')
+      return { success: false, error: 'Category with this name already exists' }
     }
 
-    // Build update data - use empty string as fallback if database column is NOT NULL
-    // TODO: Run `npx prisma db push` to update database schema to allow null icons
     const category = await prisma.category.update({
       where: { id },
       data: {
@@ -138,20 +131,17 @@ export async function updateCategory(id: string, data: Omit<CategoryData, 'id'>)
     })
 
     revalidatePath('/')
-    return { success: true, category }
+    return { success: true, data: { id: category.id } }
   } catch (error) {
     console.error('Error updating category:', error)
-    if (error instanceof Error) {
-      throw error
-    }
-    throw new Error('Failed to update category')
+    return { success: false, error: error instanceof Error ? error.message : 'Failed to update category' }
   }
 }
 
 /**
  * Delete a category
  */
-export async function deleteCategory(id: string) {
+export async function deleteCategory(id: string): Promise<ActionResult> {
   try {
     // Check if category is used in any transactions
     const transactionCount = await prisma.transaction.count({
@@ -159,9 +149,7 @@ export async function deleteCategory(id: string) {
     })
 
     if (transactionCount > 0) {
-      throw new Error(
-        `Cannot delete category: it is used in ${transactionCount} transaction(s)`
-      )
+      return { success: false, error: `Cannot delete category: it is used in ${transactionCount} transaction(s)` }
     }
 
     await prisma.category.delete({
@@ -169,12 +157,9 @@ export async function deleteCategory(id: string) {
     })
 
     revalidatePath('/')
-    return { success: true }
+    return { success: true, data: undefined }
   } catch (error) {
     console.error('Error deleting category:', error)
-    if (error instanceof Error) {
-      throw error
-    }
-    throw new Error('Failed to delete category')
+    return { success: false, error: error instanceof Error ? error.message : 'Failed to delete category' }
   }
 }

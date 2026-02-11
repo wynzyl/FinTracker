@@ -76,7 +76,7 @@ export function AddTransactionDialog({ onTransactionAdded }: AddTransactionDialo
 
     setLoading(true)
     try {
-      await createTransaction({
+      const result = await createTransaction({
         description,
         amount: Number.parseFloat(amount),
         type,
@@ -85,22 +85,27 @@ export function AddTransactionDialog({ onTransactionAdded }: AddTransactionDialo
         date,
       })
 
+      if (!result.success) {
+        toast.error(result.error)
+        return
+      }
+
       toast.success("Transaction added successfully!")
-      
+
       // Reset form
       setDescription("")
       setAmount("")
       setCategoryId("")
       setDate(new Date().toISOString().split("T")[0])
       setOpen(false)
-      
+
       // Refresh dashboard data
       if (onTransactionAdded) {
         onTransactionAdded()
       }
     } catch (error) {
       console.error("Error creating transaction:", error)
-      toast.error(error instanceof Error ? error.message : "Failed to add transaction")
+      toast.error("Failed to add transaction")
     } finally {
       setLoading(false)
     }
