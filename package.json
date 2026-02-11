@@ -11,7 +11,7 @@
     "test:ci": "jest --ci --coverage"
   },
   "prisma": {
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx prisma/noseed.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

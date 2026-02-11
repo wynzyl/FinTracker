@@ -1,41 +1,38 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client"
   output   = "../lib/generated/prisma"
 }
+
 datasource db {
   provider = "postgresql"
 }
 
 model Transaction {
-  id          String   @id @default(cuid())
+  id          String          @id @default(cuid())
   description String
   amount      Float
   type        TransactionType
   categoryId  String
-  category    Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  date        DateTime @default(now())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  date        DateTime        @default(now())
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  paymentMode PaymentMode     @default(cash)
+  category    Category        @relation(fields: [categoryId], references: [id])
 
   @@index([type])
   @@index([categoryId])
   @@index([date])
+  @@index([paymentMode])
 }
 
 model Category {
-  id        String          @id @default(cuid())
-  name      String          @unique // Internal name (e.g., "salary", "food")
-  label     String          // Display label (e.g., "Salary", "Food & Dining")
-  icon      String?         // Emoji or icon identifier (optional)
-  type      TransactionType // income or expense
-  createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt
+  id           String          @id @default(cuid())
+  name         String          @unique
+  label        String
+  icon         String?
+  type         TransactionType
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
   transactions Transaction[]
 
   @@index([type])
@@ -45,4 +42,11 @@ model Category {
 enum TransactionType {
   income
   expense
+}
+
+enum PaymentMode {
+  cash
+  gcash
+  bdo_savings
+  cbs_checking
 }
