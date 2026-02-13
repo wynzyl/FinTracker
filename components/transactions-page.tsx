@@ -23,7 +23,8 @@ import { paymentModeLabels } from "@/lib/types"
 import type { Transaction } from "@/lib/types"
 import { getTransactions, deleteTransaction } from "@/app/actions/transactions"
 import { getCategories } from "@/app/actions/categories"
-import { CalendarIcon, X } from "lucide-react"
+import { TransactionReportDialog } from "@/components/transaction-report-dialog"
+import { CalendarIcon, FileText, X } from "lucide-react"
 import { toast } from "sonner"
 import { isToday, isThisWeek, startOfDay, endOfDay, format } from "date-fns"
 import type { DateRange } from "react-day-picker"
@@ -58,6 +59,7 @@ export function TransactionsPage() {
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState<TransactionFilters>(defaultFilters)
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
+  const [reportOpen, setReportOpen] = useState(false)
 
   const loadData = async () => {
     try {
@@ -198,12 +200,21 @@ export function TransactionsPage() {
       <Header onTransactionAdded={handleRefresh} />
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Title */}
-        <div className="mb-6">
-          <h2 className="text-2xl font-semibold tracking-tight">All Transactions</h2>
-          <p className="text-sm text-muted-foreground">
-            Showing {sortedTransactions.length} of {transactions.length} transactions
-          </p>
+        {/* Title + Export */}
+        <div className="mb-6 flex items-start justify-between">
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight">All Transactions</h2>
+            <p className="text-sm text-muted-foreground">
+              Showing {sortedTransactions.length} of {transactions.length} transactions
+            </p>
+          </div>
+
+          {sortedTransactions.length > 0 && (
+            <Button variant="outline" size="sm" onClick={() => setReportOpen(true)}>
+              <FileText className="mr-2 h-4 w-4" />
+              View Report
+            </Button>
+          )}
         </div>
 
         {/* Filters */}
@@ -235,7 +246,7 @@ export function TransactionsPage() {
                   setFilters((prev) => ({ ...prev, categoryId: value }))
                 }
               >
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-45">
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>
@@ -255,7 +266,7 @@ export function TransactionsPage() {
                   setFilters((prev) => ({ ...prev, paymentMode: value }))
                 }
               >
-                <SelectTrigger className="w-[160px]">
+                <SelectTrigger className="w-40">
                   <SelectValue placeholder="All Payment Modes" />
                 </SelectTrigger>
                 <SelectContent>
@@ -270,7 +281,7 @@ export function TransactionsPage() {
 
               {/* Date Preset Filter */}
               <Select value={filters.datePreset} onValueChange={handleDatePresetChange}>
-                <SelectTrigger className="w-[150px]">
+                <SelectTrigger className="w-37.5">
                   <SelectValue placeholder="All Time" />
                 </SelectTrigger>
                 <SelectContent>
@@ -382,6 +393,16 @@ export function TransactionsPage() {
           }}
         />
       )}
+
+      {/* Report Preview Dialog */}
+      <TransactionReportDialog
+        open={reportOpen}
+        onOpenChange={setReportOpen}
+        transactions={sortedTransactions}
+        totalIncome={totalIncome}
+        totalExpense={totalExpense}
+        netTotal={netTotal}
+      />
 
       {/* Delete Confirmation Dialog */}
       <DeleteConfirmDialog
