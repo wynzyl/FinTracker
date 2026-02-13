@@ -14,31 +14,16 @@ import {
 } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+import { TransactionItem } from "@/components/transaction-item"
+import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog"
 import { EditTransactionDialog } from "@/components/edit-transaction-dialog"
-import { cn } from "@/lib/utils"
-import { categoryLabels, categoryIcons } from "@/lib/data"
+import { useDeleteConfirm } from "@/hooks/use-delete-confirm"
+import { cn, formatCurrency } from "@/lib/utils"
 import { paymentModeLabels } from "@/lib/types"
 import type { Transaction } from "@/lib/types"
 import { getTransactions, deleteTransaction } from "@/app/actions/transactions"
 import { getCategories } from "@/app/actions/categories"
-import {
-  ArrowUpRight,
-  ArrowDownRight,
-  Trash2,
-  Edit,
-  CalendarIcon,
-  X,
-} from "lucide-react"
+import { CalendarIcon, X } from "lucide-react"
 import { toast } from "sonner"
 import { isToday, isThisWeek, startOfDay, endOfDay, format } from "date-fns"
 import type { DateRange } from "react-day-picker"
@@ -72,11 +57,7 @@ export function TransactionsPage() {
   const [categories, setCategories] = useState<CategoryItem[]>([])
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState<TransactionFilters>(defaultFilters)
-
-  const [deletingId, setDeletingId] = useState<string | null>(null)
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null)
 
   const loadData = async () => {
     try {
@@ -112,32 +93,18 @@ export function TransactionsPage() {
     }
   }
 
-  const handleDeleteClick = (id: string) => {
-    setTransactionToDelete(id)
-    setDeleteDialogOpen(true)
-  }
-
-  const handleDeleteConfirm = async () => {
-    if (!transactionToDelete) return
-
-    setDeletingId(transactionToDelete)
-    try {
-      const result = await deleteTransaction(transactionToDelete)
-      if (!result.success) {
-        toast.error(result.error)
-        return
-      }
-      toast.success("Transaction deleted successfully")
-      await handleRefresh()
-    } catch (error) {
-      console.error("Error deleting transaction:", error)
-      toast.error("Failed to delete transaction")
-    } finally {
-      setDeletingId(null)
-      setDeleteDialogOpen(false)
-      setTransactionToDelete(null)
-    }
-  }
+  const {
+    deleteDialogOpen,
+    setDeleteDialogOpen,
+    deletingId,
+    handleDeleteClick,
+    handleDeleteConfirm,
+  } = useDeleteConfirm({
+    onDelete: deleteTransaction,
+    onSuccess: handleRefresh,
+    successMessage: "Transaction deleted successfully",
+    errorMessage: "Failed to delete transaction",
+  })
 
   // Filter categories based on selected type
   const filteredCategories = useMemo(() => {
@@ -359,77 +326,14 @@ export function TransactionsPage() {
                 </div>
               ) : (
                 sortedTransactions.map((transaction) => (
-                  <div
+                  <TransactionItem
                     key={transaction.id}
-                    className="flex items-center justify-between rounded-lg p-3 transition-colors hover:bg-secondary/50"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-lg">
-                        {transaction.categoryIcon ||
-                          categoryIcons[transaction.category] ||
-                          "📋"}
-                      </div>
-                      <div>
-                        <p className="font-medium">{transaction.description}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {transaction.categoryLabel ||
-                            categoryLabels[transaction.category] ||
-                            transaction.category}{" "}
-                          •{" "}
-                          {paymentModeLabels[transaction.paymentMode] ||
-                            transaction.paymentMode}{" "}
-                          •{" "}
-                          {new Date(transaction.date + "T00:00:00").toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={cn(
-                          "flex items-center gap-1 font-semibold",
-                          transaction.type === "income"
-                            ? "text-success"
-                            : "text-destructive"
-                        )}
-                      >
-                        {transaction.type === "income" ? (
-                          <ArrowUpRight className="h-4 w-4" />
-                        ) : (
-                          <ArrowDownRight className="h-4 w-4" />
-                        )}
-                        {transaction.type === "income" ? "+" : "-"}
-                        {transaction.amount.toLocaleString("en-US", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 hover:bg-secondary"
-                          onClick={() => setEditingTransaction(transaction)}
-                          title="Edit transaction"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => handleDeleteClick(transaction.id)}
-                          disabled={deletingId === transaction.id}
-                          title="Delete transaction"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
+                    transaction={transaction}
+                    onEdit={setEditingTransaction}
+                    onDelete={handleDeleteClick}
+                    isDeleting={deletingId === transaction.id}
+                    showYear
+                  />
                 ))
               )}
             </div>
@@ -442,20 +346,20 @@ export function TransactionsPage() {
                 <div className="text-sm">
                   <span className="text-muted-foreground">Income: </span>
                   <span className="font-semibold text-success">
-                    +{totalIncome.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    +{formatCurrency(totalIncome)}
                   </span>
                 </div>
                 <div className="text-sm">
                   <span className="text-muted-foreground">Expenses: </span>
                   <span className="font-semibold text-destructive">
-                    -{totalExpense.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    -{formatCurrency(totalExpense)}
                   </span>
                 </div>
                 <div className="text-sm">
                   <span className="text-muted-foreground">Net Total: </span>
                   <span className={cn("font-semibold", netTotal >= 0 ? "text-success" : "text-destructive")}>
                     {netTotal >= 0 ? "+" : "-"}
-                    {Math.abs(netTotal).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {formatCurrency(Math.abs(netTotal))}
                   </span>
                 </div>
               </div>
@@ -480,26 +384,13 @@ export function TransactionsPage() {
       )}
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Transaction</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this transaction? This action cannot be
-              undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Transaction"
+        description="Are you sure you want to delete this transaction? This action cannot be undone."
+      />
     </div>
   )
 }

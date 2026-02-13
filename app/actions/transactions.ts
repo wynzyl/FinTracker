@@ -16,12 +16,9 @@ export async function getTransactions(): Promise<Transaction[]> {
         category: true,
       },
       orderBy: [
-        {
-          date: 'desc', // Most recent date first
-        },
-        {
-          createdAt: 'desc', // If dates are the same, most recently created first
-        },
+        { date: 'desc' },
+        { createdAt: 'desc' },
+        { id: 'desc' },
       ],
     })
 

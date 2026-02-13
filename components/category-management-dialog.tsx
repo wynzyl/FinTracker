@@ -18,14 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
+import { CategoryTable } from "@/components/category-table"
+import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog"
 import {
   createCategory,
   updateCategory,
@@ -34,18 +28,8 @@ import {
   type CategoryData,
 } from "@/app/actions/categories"
 import type { TransactionType } from "@/lib/types"
-import { Settings, Plus, Edit, Trash2, Save, X } from "lucide-react"
+import { Settings, Plus, Save, X } from "lucide-react"
 import { toast } from "sonner"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 
 interface Category {
   id: string
@@ -103,14 +87,16 @@ export function CategoryManagementDialog() {
     setEditingId(null)
   }
 
-  const handleEdit = (category: Category) => {
+  const handleEdit = (category: { id: string; name: string; label: string; icon: string | null }) => {
+    const fullCategory = categories.find((c) => c.id === category.id)
+    if (!fullCategory) return
     setFormData({
-      name: category.name,
-      label: category.label,
-      icon: category.icon || "",
-      type: category.type,
+      name: fullCategory.name,
+      label: fullCategory.label,
+      icon: fullCategory.icon || "",
+      type: fullCategory.type,
     })
-    setEditingId(category.id)
+    setEditingId(fullCategory.id)
   }
 
   const handleCancelEdit = () => {
@@ -309,126 +295,35 @@ export function CategoryManagementDialog() {
             {/* Categories List */}
             <div className="space-y-4">
               <h3 className="font-semibold">Income Categories</h3>
-              {loading && categories.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Loading...</p>
-              ) : incomeCategories.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No income categories yet</p>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Icon</TableHead>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Label</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {incomeCategories.map((category) => (
-                      <TableRow key={category.id}>
-                        <TableCell className="text-2xl">
-                          {category.icon || <span className="text-muted-foreground">—</span>}
-                        </TableCell>
-                        <TableCell className="font-mono text-sm">{category.name}</TableCell>
-                        <TableCell>{category.label}</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEdit(category)}
-                              disabled={loading}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDeleteClick(category.id)}
-                              disabled={loading}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
+              <CategoryTable
+                categories={incomeCategories}
+                onEdit={handleEdit}
+                onDelete={handleDeleteClick}
+                loading={loading}
+                emptyMessage="No income categories yet"
+              />
 
               <h3 className="font-semibold mt-6">Expense Categories</h3>
-              {expenseCategories.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No expense categories yet</p>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Icon</TableHead>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Label</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {expenseCategories.map((category) => (
-                      <TableRow key={category.id}>
-                        <TableCell className="text-2xl">
-                          {category.icon || <span className="text-muted-foreground">—</span>}
-                        </TableCell>
-                        <TableCell className="font-mono text-sm">{category.name}</TableCell>
-                        <TableCell>{category.label}</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEdit(category)}
-                              disabled={loading}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDeleteClick(category.id)}
-                              disabled={loading}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
+              <CategoryTable
+                categories={expenseCategories}
+                onEdit={handleEdit}
+                onDelete={handleDeleteClick}
+                loading={loading}
+                emptyMessage="No expense categories yet"
+              />
             </div>
           </div>
         </DialogContent>
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Category</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this category? This action cannot be undone.
-              Categories that are used in transactions cannot be deleted.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Category"
+        description="Are you sure you want to delete this category? This action cannot be undone. Categories that are used in transactions cannot be deleted."
+      />
     </>
   )
 }

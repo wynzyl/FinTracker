@@ -20,7 +20,7 @@ export function Header({ onTransactionAdded }: HeaderProps) {
           </div>
           <div>
             <h1 className="text-xl font-semibold tracking-tight">Yamban FinTracker</h1>
-            <p className="text-xs text-muted-foreground">Income & Expense Monitor</p>
+            <p className="text-xs text-muted-foreground">Sales & Expense Monitoring</p>
           </div>
         </Link>
         <div className="flex items-center gap-2">
