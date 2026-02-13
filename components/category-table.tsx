@@ -66,6 +66,7 @@ export function CategoryTable({
                   size="sm"
                   onClick={() => onEdit(category)}
                   disabled={loading}
+                  aria-label="Edit category"
                 >
                   <Edit className="h-4 w-4" />
                 </Button>
@@ -74,6 +75,7 @@ export function CategoryTable({
                   size="sm"
                   onClick={() => onDelete(category.id)}
                   disabled={loading}
+                  aria-label="Delete category"
                 >
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>

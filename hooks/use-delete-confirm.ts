@@ -32,7 +32,7 @@ export function useDeleteConfirm({
     try {
       const result = await onDelete(itemToDelete)
       if (!result.success) {
-        toast.error(result.error)
+        toast.error(result.error || errorMessage)
         return
       }
       toast.success(successMessage)

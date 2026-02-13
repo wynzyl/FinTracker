@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -21,14 +21,15 @@ interface AddTransactionDialogProps {
 export function AddTransactionDialog({ onTransactionAdded }: AddTransactionDialogProps) {
   const [open, setOpen] = useState(false)
 
-  const defaultValues: TransactionFormValues = {
+  const defaultValues: TransactionFormValues = useMemo(() => ({
     type: "expense",
     description: "",
     amount: "",
     categoryId: "",
+    category: "",
     date: new Date().toISOString().split("T")[0],
     paymentMode: "cash",
-  }
+  }), [])
 
   const handleSubmit = async (values: TransactionFormValues) => {
     try {
@@ -36,7 +37,7 @@ export function AddTransactionDialog({ onTransactionAdded }: AddTransactionDialo
         description: values.description,
         amount: Number.parseFloat(values.amount),
         type: values.type,
-        category: "other-expense",
+        category: values.category as import("@/lib/types").Category,
         categoryId: values.categoryId,
         date: values.date,
         paymentMode: values.paymentMode,

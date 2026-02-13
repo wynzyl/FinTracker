@@ -34,6 +34,7 @@ export function EditTransactionDialog({
     description: transaction.description,
     amount: transaction.amount.toString(),
     categoryId: transaction.categoryId || "",
+    category: transaction.category || "",
     date: transaction.date,
     paymentMode: transaction.paymentMode || "cash",
   }), [transaction])
@@ -45,7 +46,7 @@ export function EditTransactionDialog({
         description: values.description,
         amount: Number.parseFloat(values.amount),
         type: values.type,
-        category: "other-expense",
+        category: values.category as import("@/lib/types").Category,
         categoryId: values.categoryId,
         date: values.date,
         paymentMode: values.paymentMode,

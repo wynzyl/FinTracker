@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -29,6 +29,7 @@ export interface TransactionFormValues {
   description: string
   amount: string
   categoryId: string
+  category: string
   date: string
   paymentMode: PaymentMode
 }
@@ -63,6 +64,8 @@ export function TransactionForm({
   const [loading, setLoading] = useState(false)
   const [categories, setCategories] = useState<Category[]>([])
 
+  const isFirstLoad = useRef(true)
+
   // Reset form when initialValues change (e.g. when editing a different transaction)
   useEffect(() => {
     setType(initialValues.type)
@@ -71,7 +74,8 @@ export function TransactionForm({
     setCategoryId(initialValues.categoryId)
     setDate(initialValues.date)
     setPaymentMode(initialValues.paymentMode)
-  }, [initialValues])
+    isFirstLoad.current = true
+  }, [initialValues.type, initialValues.description, initialValues.amount, initialValues.categoryId, initialValues.date, initialValues.paymentMode])
 
   // Load categories when type changes or dialog opens
   useEffect(() => {
@@ -94,8 +98,10 @@ export function TransactionForm({
     try {
       const data = await getCategoriesByType(type)
       setCategories(data as Category[])
-      // Only reset category when type changes and there's no initial category
-      if (type !== initialValues.type) {
+      // Only clear categoryId when the type actually changes, not on first load
+      if (isFirstLoad.current) {
+        isFirstLoad.current = false
+      } else {
         setCategoryId("")
       }
     } catch (error) {
@@ -112,7 +118,9 @@ export function TransactionForm({
     }
     setLoading(true)
     try {
-      await onSubmit({ type, description, amount, categoryId, date, paymentMode })
+      const selectedCategory = categories.find((cat) => cat.id === categoryId)
+      const category = selectedCategory?.name || ""
+      await onSubmit({ type, description, amount, categoryId, category, date, paymentMode })
     } finally {
       setLoading(false)
     }
