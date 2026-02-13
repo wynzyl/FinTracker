@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardContent } from "@/components/ui/card"
-import { cn } from "@/lib/utils"
+import { cn, formatCurrency } from "@/lib/utils"
 import type { Transaction, PaymentMode } from "@/lib/types"
 import { paymentModeLabels } from "@/lib/types"
 import { Banknote, Smartphone, Landmark, BookCheck, type LucideIcon } from "lucide-react"
@@ -38,8 +38,7 @@ export function PaymentModeChart({ transactions }: PaymentModeChartProps) {
     return { mode, income, expenses, balance, incomePercent, expensePercent }
   }).filter((s) => s.income > 0 || s.expenses > 0)
 
-  const fmt = (n: number) =>
-    n.toLocaleString("en-US", { minimumFractionDigits: 2 })
+  const fmt = formatCurrency
 
   return (
     <>

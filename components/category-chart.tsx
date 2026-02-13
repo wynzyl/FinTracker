@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { categoryLabels } from "@/lib/data"
+import { formatCurrency } from "@/lib/utils"
 import type { Transaction } from "@/lib/types"
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts"
 
@@ -81,7 +82,7 @@ export function CategoryChart({ transactions }: CategoryChartProps) {
                     color: "oklch(0.98 0 0)",
                   }}
                   formatter={(value: number) => [
-                    value.toLocaleString("en-US", { minimumFractionDigits: 2 }),
+                    formatCurrency(value),
                     "",
                   ]}
                 />
@@ -99,7 +100,7 @@ export function CategoryChart({ transactions }: CategoryChartProps) {
                   {(item.name || item.category).toUpperCase()}
                 </span>
                 <span className="text-sm font-medium text-right w-20">
-                  {item.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                  {formatCurrency(item.amount)}
                 </span>
                 <span className="text-sm font-medium text-right w-16">
                   {item.percentage}%

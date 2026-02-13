@@ -9,6 +9,7 @@ import { CategoryChart } from "@/components/category-chart"
 import { PaymentModeChart } from "@/components/payment-mode-chart"
 import { getTransactions, getMonthlyStats, getTotalExpensesFromDB } from "@/app/actions/transactions"
 import { DashboardSkeleton } from "@/components/dashboard-skeleton"
+import { formatCurrency } from "@/lib/utils"
 import type { Transaction } from "@/lib/types"
 
 export function Dashboard() {
@@ -112,18 +113,18 @@ export function Dashboard() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
             title="Total Balance"
-            value={balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+            value={formatCurrency(balance)}
             change={balanceChange}
           />
           <StatCard
             title="Total Income"
-            value={totalIncome.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+            value={formatCurrency(totalIncome)}
             change={incomeChange}
             variant="income"
           />
           <StatCard
             title="Total Expenses"
-            value={totalExpenses.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+            value={formatCurrency(totalExpenses)}
             change={expenseChange}
             variant="expense"
           />
@@ -146,9 +147,9 @@ export function Dashboard() {
         </div>
 
         {/* Transaction List */}
-        <div className="mt-8">
+        {/* <div className="mt-8">
           <TransactionList transactions={transactions} onDelete={handleDeleteTransaction} />
-        </div>
+        </div> */}
       </main>
     </div>
   )

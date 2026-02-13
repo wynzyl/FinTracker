@@ -9,9 +9,9 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'FinTrack - Income & Expense Monitor',
-  description: 'Track your income and expenses with beautiful visualizations',
-  generator: 'v0.app',
+  title: 'FinTrack - Sales & Expense Monitoring',
+  description: 'Track your sales and expenses with beautiful visualizations',
+ 
   icons: {
     icon: [
       {
