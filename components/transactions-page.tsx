@@ -28,7 +28,7 @@ import { EditTransactionDialog } from "@/components/edit-transaction-dialog"
 import { cn } from "@/lib/utils"
 import { categoryLabels, categoryIcons } from "@/lib/data"
 import { paymentModeLabels } from "@/lib/types"
-import type { Transaction, PaymentMode } from "@/lib/types"
+import type { Transaction } from "@/lib/types"
 import { getTransactions, deleteTransaction } from "@/app/actions/transactions"
 import { getCategories } from "@/app/actions/categories"
 import {
@@ -169,8 +169,8 @@ export function TransactionsPage() {
   // Sort filtered transactions by date descending
   const sortedTransactions = useMemo(() => {
     return [...filteredTransactions].sort((a, b) => {
-      const dateA = new Date(a.date).getTime()
-      const dateB = new Date(b.date).getTime()
+      const dateA = new Date(a.date + "T00:00:00").getTime()
+      const dateB = new Date(b.date + "T00:00:00").getTime()
       if (dateB !== dateA) return dateB - dateA
       return b.id.localeCompare(a.id)
     })
@@ -379,7 +379,7 @@ export function TransactionsPage() {
                           {paymentModeLabels[transaction.paymentMode] ||
                             transaction.paymentMode}{" "}
                           •{" "}
-                          {new Date(transaction.date).toLocaleDateString("en-US", {
+                          {new Date(transaction.date + "T00:00:00").toLocaleDateString("en-US", {
                             month: "short",
                             day: "numeric",
                             year: "numeric",
