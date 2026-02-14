@@ -24,7 +24,7 @@ export function Dashboard() {
       setLoading(true)
       setError(null)
       const [transactionsData, monthlyStats, dbTotalExpenses] = await Promise.all([
-        getTransactions(),
+        getTransactions({ upToToday: true }),
         getMonthlyStats(),
         getTotalExpensesFromDB(),
       ])
@@ -49,7 +49,7 @@ export function Dashboard() {
     try {
       // Refresh data without showing full loading screen
       const [transactionsData, monthlyStats, dbTotalExpenses] = await Promise.all([
-        getTransactions(),
+        getTransactions({ upToToday: true }),
         getMonthlyStats(),
         getTotalExpensesFromDB(),
       ])

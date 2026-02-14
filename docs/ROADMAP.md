@@ -2,16 +2,16 @@
 
 Planned features and improvements for Yamban FinTracker.
 
-## Phase 1: Foundation Hardening (Current)
+## Phase 1: Foundation Hardening (Completed)
 
 Focus: Stability, code quality, and developer experience.
 
-- [ ] Add automated tests (Jest + React Testing Library)
+- [x] Add automated tests (Jest + React Testing Library)
 - [ ] Set up CI/CD pipeline (GitHub Actions)
-- [ ] Remove `ignoreBuildErrors` from Next.js config and fix build errors
-- [ ] Add input validation with Zod schemas on all server actions
-- [ ] Improve error handling and user feedback
-- [ ] Add loading skeletons for dashboard components
+- [x] Remove `ignoreBuildErrors` from Next.js config and fix build errors
+- [x] Add input validation with Zod schemas on all server actions
+- [x] Improve error handling and user feedback (standardized `ActionResult` type)
+- [x] Add loading skeletons for dashboard components
 
 ## Phase 2: Authentication & Multi-User
 
@@ -28,13 +28,16 @@ Focus: User accounts and data isolation.
 
 Focus: Better data entry and filtering.
 
-- [ ] Date range filtering on dashboard
+- [x] Date range filtering on dashboard (current date filtering applied)
 - [ ] Search transactions by description
-- [ ] Filter transactions by category and type
+- [x] Filter transactions by category and type
 - [ ] Pagination for transaction list
 - [ ] Bulk delete transactions
 - [ ] Recurring/scheduled transactions
 - [ ] Transaction notes and attachments
+- [x] Payment mode tracking and filtering
+- [x] Dedicated transactions page with date presets (Today, This Week, Custom Range)
+- [x] Transaction report generation
 
 ## Phase 4: Budgeting & Goals
 

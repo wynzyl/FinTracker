@@ -9,9 +9,17 @@ import { createTransactionSchema, updateTransactionSchema } from '@/lib/schemas'
  * Fetch all transactions from the database
  * Returns transactions with category information
  */
-export async function getTransactions(): Promise<Transaction[]> {
+export async function getTransactions(options?: { upToToday?: boolean }): Promise<Transaction[]> {
   try {
+    const where: Record<string, unknown> = {}
+    if (options?.upToToday) {
+      const today = new Date()
+      today.setHours(23, 59, 59, 999)
+      where.date = { lte: today }
+    }
+
     const transactions = await prisma.transaction.findMany({
+      where,
       include: {
         category: true,
       },
@@ -190,7 +198,13 @@ export async function deleteTransaction(id: string): Promise<ActionResult> {
  */
 export async function getMonthlyStats() {
   try {
+    const today = new Date()
+    today.setHours(23, 59, 59, 999)
+
     const transactions = await prisma.transaction.findMany({
+      where: {
+        date: { lte: today },
+      },
       orderBy: {
         date: 'desc',
       },
@@ -242,9 +256,13 @@ export async function getMonthlyStats() {
  */
 export async function getTotalExpensesFromDB() {
   try {
+    const today = new Date()
+    today.setHours(23, 59, 59, 999)
+
     const result = await prisma.transaction.aggregate({
       where: {
         type: 'expense',
+        date: { lte: today },
       },
       _sum: {
         amount: true,
