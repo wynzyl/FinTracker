@@ -53,6 +53,13 @@ const defaultFilters: TransactionFilters = {
   dateRange: undefined,
 }
 
+/**
+ * Page component that displays and manages a filtered and sorted list of financial transactions with aggregate totals and dialogs for editing and deleting.
+ *
+ * Provides controls for filtering by type, category, payment mode, and date (including custom range), shows transactions ordered newest-first, displays income/expense/net totals, and exposes UI for refreshing, editing, and deleting transactions. Loads transactions and categories on mount and refreshes data after edits or deletions; shows a loading state and user-facing error toasts.
+ *
+ * @returns The transactions page UI as a React element
+ */
 export function TransactionsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [categories, setCategories] = useState<CategoryItem[]>([])
