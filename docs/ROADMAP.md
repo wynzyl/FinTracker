@@ -7,7 +7,7 @@ Planned features and improvements for Yamban FinTracker.
 Focus: Stability, code quality, and developer experience.
 
 - [x] Add automated tests (Jest + React Testing Library)
-- [ ] Set up CI/CD pipeline (GitHub Actions)
+- [x] Set up CI/CD pipeline (GitHub Actions)
 - [x] Remove `ignoreBuildErrors` from Next.js config and fix build errors
 - [x] Add input validation with Zod schemas on all server actions
 - [x] Improve error handling and user feedback (standardized `ActionResult` type)
